@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Filled rounded text field used by the proportion calculator -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surface_container" />
+            <corners android:radius="@dimen/radius_default" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/primary" />
+        </shape>
+    </item>
+
+    <item android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surface_container_low" />
+            <corners android:radius="@dimen/radius_default" />
+            <stroke
+                android:width="@dimen/card_stroke"
+                android:color="@android:color/transparent" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surface_container" />
+            <corners android:radius="@dimen/radius_default" />
+            <stroke
+                android:width="@dimen/card_stroke"
+                android:color="@color/outline_variant" />
+        </shape>
+    </item>
+
+</selector>

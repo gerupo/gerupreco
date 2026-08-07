@@ -1,8 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!--
+        Design system: "Neon Utility Dark"
+        Deep charcoal surfaces + vibrant mint (primary) and soft purple (secondary).
+    -->
+
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="back_icon_item">#FF2D2D37</color>
-    <color name="btn_positive">@color/material_dynamic_tertiary70</color>
-    <color name="btn_negative">@color/material_dynamic_tertiary70</color>
+
+    <!-- Surfaces / tonal layering -->
+    <color name="surface">#131313</color>
+    <color name="surface_dim">#131313</color>
+    <color name="surface_bright">#393939</color>
+    <color name="surface_container_lowest">#0E0E0E</color>
+    <color name="surface_container_low">#1C1B1B</color>
+    <color name="surface_container">#201F1F</color>
+    <color name="surface_container_high">#2A2A2A</color>
+    <color name="surface_container_highest">#353534</color>
+    <color name="surface_variant">#353534</color>
+    <color name="on_surface">#E5E2E1</color>
+    <color name="on_surface_variant">#BCC9C5</color>
+    <color name="inverse_surface">#E5E2E1</color>
+    <color name="inverse_on_surface">#313030</color>
+    <color name="background">#131313</color>
+    <color name="on_background">#E5E2E1</color>
+
+    <!-- Outlines -->
+    <color name="outline">#869390</color>
+    <color name="outline_variant">#3D4946</color>
+
+    <!-- Primary (mint / teal) -->
+    <color name="primary">#C3FFF3</color>
+    <color name="on_primary">#003731</color>
+    <color name="primary_container">#76EAD7</color>
+    <color name="on_primary_container">#00695D</color>
+    <color name="inverse_primary">#006B5F</color>
+    <color name="surface_tint">#64D9C7</color>
+    <color name="primary_fixed">#82F6E3</color>
+    <color name="primary_fixed_dim">#64D9C7</color>
+    <color name="on_primary_fixed">#00201C</color>
+    <color name="on_primary_fixed_variant">#005047</color>
+
+    <!-- Secondary (soft purple) -->
+    <color name="secondary">#D4BBFF</color>
+    <color name="on_secondary">#3E1975</color>
+    <color name="secondary_container">#55338D</color>
+    <color name="on_secondary_container">#C6A5FF</color>
+    <color name="secondary_fixed">#EBDCFF</color>
+    <color name="secondary_fixed_dim">#D4BBFF</color>
+    <color name="on_secondary_fixed">#270058</color>
+    <color name="on_secondary_fixed_variant">#55338D</color>
+
+    <!-- Tertiary -->
+    <color name="tertiary">#C6FFF0</color>
+    <color name="on_tertiary">#00382F</color>
+    <color name="tertiary_container">#49EFD2</color>
+    <color name="on_tertiary_container">#00695B</color>
+    <color name="tertiary_fixed">#59FBDE</color>
+    <color name="tertiary_fixed_dim">#2EDEC2</color>
+    <color name="on_tertiary_fixed">#00201B</color>
+    <color name="on_tertiary_fixed_variant">#005045</color>
+
+    <!-- Error -->
+    <color name="error">#FFB4AB</color>
+    <color name="on_error">#690005</color>
+    <color name="error_container">#93000A</color>
+    <color name="on_error_container">#FFDAD6</color>
+
+    <!-- Aliases kept for existing code references -->
+    <color name="back_icon_item">@color/surface_container_high</color>
+    <color name="btn_positive">@color/primary</color>
+    <color name="btn_negative">@color/primary</color>
+
 </resources>

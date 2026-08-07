@@ -12,7 +12,7 @@
     <item
         android:id="@+id/action_search"
         android:title="Buscar"
-        android:icon="@android:drawable/ic_menu_search"
+        android:icon="@drawable/ic_search_24"
         android:orderInCategory="0"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="ifRoom|collapseActionView" />

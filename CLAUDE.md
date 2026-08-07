@@ -1,0 +1,143 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## O que é o app
+
+**Super GeruApp** (`com.vacari.gerupreco`) — app Android nativo, pessoal, em **Java**, com dois módulos escolhidos na tela inicial:
+
+- **GeruPreço** — cadastro de produtos por código de barras e consulta do menor preço em estabelecimentos próximos, via API pública da **Nota Paraná**.
+- **GeruRegra** — calculadora de regra de três com múltiplas linhas.
+
+A interface é toda em **português**. Comentários e nomes de código também seguem o português em boa parte.
+
+## Comandos
+
+O wrapper do Gradle é usado para tudo. **O JDK importa**: o projeto compila com `sourceCompatibility`/`targetCompatibility` **25**, e o JBR que acompanha o Android Studio é o único JDK 25 da máquina.
+
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+
+.\gradlew.bat assembleDebug          # APK debug -> app/build/outputs/apk/debug/app-v<versionCode>-debug.apk
+.\gradlew.bat assembleRelease        # gera APK NÃO assinado (não há signingConfig no build.gradle)
+.\gradlew.bat testDebugUnitTest      # testes JVM
+.\gradlew.bat testDebugUnitTest --tests "com.vacari.gerupreco.util.StringUtilTest"   # um teste só
+```
+
+Compilar com um JDK anterior falha com `error: invalid source release: 25`. No Android Studio isso é controlado por `.gradle/config.properties` (`java.home`), que **não** é versionado — cada máquina precisa apontar para um JDK 25.
+
+Não há lint configurado além do padrão do AGP, nem testes instrumentados reais (`ExampleInstrumentedTest` é o esqueleto gerado).
+
+## Stack e decisões de build
+
+- **AGP 9.3.1 / Gradle 9.7 / Java 25.** O Android Studio 2026.1.3 declara compatibilidade conhecida até AGP 9.3.0; o sync funciona mesmo assim, mas se o IDE reclamar, fixar `9.3.0` resolve.
+- **`compileSdk = 37`, `targetSdk = 36`** — separação deliberada: as APIs do Android 17 ficam disponíveis na compilação sem que as mudanças de comportamento de runtime sejam aplicadas. Subir o `targetSdk` é uma decisão à parte, e o ponto mais sensível é o fluxo de auto-atualização (`UpdateJob`), que instala APK via `FileProvider` + `REQUEST_INSTALL_PACKAGES`.
+- **Sem Kotlin e sem Compose.** O plugin Kotlin está declarado com `apply false` na raiz e nunca é aplicado. Toda a UI é XML com Views clássicas.
+- **Lombok** (`@Getter`/`@Setter`) nos modelos.
+- Sintaxe do Groovy DSL usa **atribuição** (`namespace = '...'`), não `namespace '...'` — a forma antiga é deprecada no Gradle 9 e removida no 10.
+
+## Arquitetura
+
+Pacotes sob `com.vacari.gerupreco`, organizados por tipo (`activity`, `adapter`, `dialog`, `model`, `repository`, `retrofit`, `util`). Não há DI, ViewModel nem camada de domínio — Activities falam direto com repositórios estáticos e recebem resultado por `Callback<T>`.
+
+**Duas fontes de dados distintas:**
+
+1. **Firestore** (`ItemRepository`, coleção `item`) — catálogo de produtos do usuário. É a fonte de verdade do cadastro.
+2. **Nota Paraná** via Retrofit (`RetrofitRequest`) — preços por código de barras. Somente leitura, externa.
+
+Há ainda SQLite/ORMLite (`DatabaseHelper`, `NotificationRepository`) para notificações de preço-alvo, mas **essa funcionalidade está desativada**: a entrada de menu e o item de contexto que levam à `NotificationActivity` estão comentados, então a tela é inalcançável pela UI.
+
+### Fluxo das telas
+
+`MainActivity` → `LowestPriceProduct` (lista de produtos) → `LowestPriceActivity` (preços de um produto).
+`MainActivity` → `SimpleProportionActivity` (regra de três).
+
+### Gate de versão — não é bug
+
+`MainActivity.configureActions()` **não** é chamado no `onCreate`. Quem chama é `UpdateJob.checkVerisonCode()`, e só quando a versão instalada está em dia com o documento `appVersion` do Firestore. Estando desatualizada, aparece o diálogo de atualização e os cards da tela inicial permanecem inertes. Isso é intencional: bloqueia o uso do app em versões antigas. **Não "conserte" adicionando a chamada no `onCreate`.**
+
+Pelo mesmo motivo os cards em `activity_main.xml` não declaram `android:clickable="true"` — se declarassem, dariam feedback de toque enquanto ainda bloqueados.
+
+## Modelo de dados
+
+`Item` (Firestore): `id`, `barCode`, `description`, `size`, `unitMeasure`, `tags`.
+
+**Firestore é schemaless** — adicionar um campo no POJO e salvar já o cria nos documentos. Não existe migração de schema a fazer no console. Documentos antigos apenas não têm o campo e voltam `null`; por isso `Item.getTags()` tem guarda de nulo em vez de depender do inicializador.
+
+`unitMeasure` vem do `string-array` `unit_measurement` (`G`, `KG`, `ML`, `L`) em `res/values/unit.xml`.
+
+### Acesso administrativo aos dados
+
+O app **não usa autenticação** e as regras do Firestore permitem acesso público. Isso significa que a API REST funciona só com a chave em `app/google-services.json`, o que é útil para migrações em massa:
+
+```
+GET   https://firestore.googleapis.com/v1/projects/gerupreco/databases/(default)/documents/item?key=<API_KEY>
+PATCH https://firestore.googleapis.com/v1/<document.name>?key=<API_KEY>&updateMask.fieldPaths=<campo>
+```
+
+Sempre usar `updateMask.fieldPaths` para não sobrescrever o documento inteiro, e salvar um dump antes de escrever em lote.
+
+## Tags
+
+Tags são livres (o usuário digita), com sugestão a partir das já usadas em outros produtos. O vocabulário atual segue **categoria + tipo** (`bebida` + `cerveja`, `laticinio` + `zero lactose`, `limpeza` + `roupa`), normalmente 2 por produto.
+
+- A **cor sai de um hash do nome normalizado** sobre `R.array.tag_palette` (`TagUtil.colorFor`). Nada de cor é persistido, e a mesma tag tem sempre a mesma cor.
+- Chips são construídos em código por `TagUtil.createChip` e usados tanto na lista quanto no diálogo de cadastro.
+- Deduplicação é por nome normalizado, então `Bebida` e `bebida` são a mesma tag; a grafia já em uso é reaproveitada.
+
+## Texto: acentos e ordenação
+
+`StringUtil` centraliza as duas regras, e **elas devem ser usadas em qualquer busca ou ordenação nova**:
+
+- `normalize()` — minúsculas, sem acentos, sem espaços nas pontas. Base da busca, que casa descrição **e** tags.
+- `textComparator()` — `Collator` pt-BR com força `SECONDARY`. Sem ele, comparação direta de `String` joga "Água" para o fim da lista, longe de "Agua", porque ordena por code point Unicode.
+
+## Design system — "Neon Utility Dark"
+
+Tema escuro com primária mint e secundária roxa. Hierarquia vem de **camadas tonais**, não de sombras. Os tokens ficam em `res/values/`:
+
+| Arquivo | Conteúdo |
+|---|---|
+| `colors.xml` | paleta completa (surfaces, primary, secondary, outline) |
+| `type.xml` | `TextAppearance.GeruPreco.*` |
+| `styles.xml` | cards, campos, FAB, action bar, diálogos, shapes |
+| `dimens.xml` | escala de 8px (`space_*`) e raios (`radius_*`) |
+| `tag_colors.xml` | paleta das tags |
+
+Fontes **Plus Jakarta Sans** (estrutura) e **JetBrains Mono** (rótulos utilitários em caixa alta) estão embutidas em `res/font/`. Preferir os estilos existentes a declarar cor, tamanho e fonte soltos no layout.
+
+## Armadilhas já encontradas
+
+Todas custaram um ciclo de depuração; vale não repetir.
+
+- **`fitsSystemWindows` num container que rola.** Promover `RecyclerView` a raiz do layout com `fitsSystemWindows="true"` faz o `ActionBarOverlayLayout` esticá-lo pela janela inteira e converter os insets em padding; junto com `clipToPadding="false"`, os itens passam a desenhar por baixo da action bar e da status bar. Manter sempre um container não-rolável na raiz absorvendo os insets.
+- **Diálogos não herdam `windowSoftInputMode` da Activity.** Têm janela própria; sem `getWindow().setSoftInputMode(SOFT_INPUT_ADJUST_RESIZE)` o teclado cobre os botões Salvar/Cancelar.
+- **Activities com campo de texto precisam de `android:windowSoftInputMode="adjustResize"`** no manifesto, ou o teclado cobre FAB e conteúdo.
+- **`Spinner` precisa de largura folgada.** O padding da seta consome ~55dp; com pouco espaço, unidades de duas letras (`ML`, `KG`) simplesmente deixam de ser desenhadas enquanto as de uma letra (`G`, `L`) aparecem. Atenção especial ao trocar `layout_width="match_parent"`+peso por `0dp`+peso — a distribuição de largura resultante é bem diferente.
+- **`SearchView` reexibe o teclado ao reassumir o foco.** Ao fechar um diálogo ou voltar de outra tela, o teclado volta sozinho. `LowestPriceProduct.clearSearchFocus()` é chamado antes de cada sobreposição; manter esse cuidado ao adicionar novas ações na lista.
+- **`NotificationAdapter` faz cast de `<Switch>` para `android.widget.Switch`**, mas o AppCompat infla a tag como `SwitchCompat`. Isso estouraria em runtime — está latente só porque a tela é inalcançável.
+
+## Verificação em dispositivo
+
+Há um aparelho físico conectado por adb (Wi-Fi). Como não existe emulador instalado nem suíte de testes de UI, **a verificação real é dirigir o app por adb**. Isso já pegou defeitos que passariam despercebidos numa leitura de código:
+
+```powershell
+$adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
+& $adb install -r "app\build\outputs\apk\debug\app-v11-debug.apk"
+& $adb shell monkey -p com.vacari.gerupreco -c android.intent.category.LAUNCHER 1
+
+& $adb shell uiautomator dump /sdcard/uu.xml   # hierarquia com bounds e ids
+& $adb shell screencap -p /sdcard/s.png        # captura
+& $adb shell dumpsys input_method | Select-String "mInputShown="   # teclado visível?
+```
+
+Notas que economizam tempo:
+
+- **Obter coordenadas do `uiautomator dump`, nunca estimar por pixel da captura.** E **remedir depois de abrir o teclado** — o layout desloca, e um toque com coordenadas antigas cai numa tecla.
+- As Activities além da `MainActivity` são `exported="false"`; `am start` direto falha com `SecurityException`. É preciso navegar pela UI.
+- Um elemento pode existir na hierarquia com o texto certo e mesmo assim **não ser desenhado**. Quando a suspeita for essa, ler os pixels da região (`System.Drawing.Bitmap.GetPixel`) distingue "não renderizado" de "renderizado sem contraste".
+- Long press: `input swipe <x> <y> <x> <y> 900`.
+
+## Segurança
+
+`key.jks` e `readmeKey.txt` (que contém a senha do keystore em texto plano) estão no repositório e **não** constam do `.gitignore`. Qualquer pessoa com acesso ao repo pode assinar builds como se fossem oficiais. Vale rotacionar a chave e removê-los do versionamento.

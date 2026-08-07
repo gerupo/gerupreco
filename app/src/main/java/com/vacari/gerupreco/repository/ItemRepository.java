@@ -5,6 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.vacari.gerupreco.model.firebase.Item;
 import com.vacari.gerupreco.util.Callback;
+import com.vacari.gerupreco.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -28,7 +29,9 @@ public class ItemRepository {
                             itemTOList.add(item);
                         }
 
-                        itemTOList.sort(Comparator.comparing(Item::getDescription).thenComparing(Item::getSize));
+                        Comparator<String> byText = StringUtil.textComparator();
+                        itemTOList.sort(Comparator.comparing(Item::getDescription, byText)
+                                .thenComparing(Item::getSize, byText));
                         callback.callback(itemTOList);
                     }
                 });

@@ -25,5 +25,41 @@
     <string name="title_activity_idea">IdeaActivity</string>
     <string name="title_activity_register_idea">RegisterIdea</string>
 
+    <!-- Module picker -->
+    <string name="module_subtitle">Selecione um módulo para começar</string>
+    <string name="module_gerupreco">GeruPreço</string>
+    <string name="module_gerupreco_description">Comparação inteligente de preços e análise de mercado.</string>
+    <string name="module_geruregra">GeruRegra</string>
+    <string name="module_geruregra_description">Regra de três e cálculo de proporções.</string>
+
+    <!-- Product list -->
+    <string name="product">Produto</string>
+    <string name="size">Tamanho</string>
+    <string name="unit">un</string>
+    <string name="tags">Tags</string>
+    <string name="add_tag">Adicionar tag</string>
+    <string name="see_prices">Ver preços</string>
+
+    <!-- Lowest price list -->
+    <string name="establishment">Estabelecimento</string>
+    <string name="address">Endereço</string>
+    <string name="last_update">Última atualização</string>
+    <string name="price_placeholder">R$ 0,00</string>
+    <string name="currency_symbol">R$</string>
+    <string name="bullet">•</string>
+
+    <!-- Notifications -->
+    <string name="price_alerts">Alertas de preço</string>
+
+    <!-- Proportion calculator -->
+    <string name="base_proportion">Proporção Base</string>
+    <string name="just_like">Assim como</string>
+    <string name="is_to">está para</string>
+    <string name="value_a">Valor A</string>
+    <string name="value_b">Valor B</string>
+    <string name="value">Valor</string>
+    <string name="result">Resultado</string>
+    <string name="add_row">Adicionar Linha</string>
+    <string name="remove">Remover</string>
 
 </resources>

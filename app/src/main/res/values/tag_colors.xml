@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        Paleta das tags. Cores claras e pouco saturadas: no chip elas entram
+        como texto solido sobre o mesmo tom com ~14% de opacidade, o que mantem
+        o visual discreto sobre as superficies escuras do tema.
+        A cor de cada tag e derivada do nome, entao permanece estavel.
+    -->
+    <color name="tag_mint">#76EAD7</color>
+    <color name="tag_purple">#D4BBFF</color>
+    <color name="tag_blue">#A8C7FA</color>
+    <color name="tag_amber">#F2C97D</color>
+    <color name="tag_rose">#F5A9B8</color>
+    <color name="tag_lime">#C3E88D</color>
+    <color name="tag_cyan">#8FD8E8</color>
+    <color name="tag_coral">#FFB08A</color>
+
+    <array name="tag_palette">
+        <item>@color/tag_mint</item>
+        <item>@color/tag_purple</item>
+        <item>@color/tag_blue</item>
+        <item>@color/tag_amber</item>
+        <item>@color/tag_rose</item>
+        <item>@color/tag_lime</item>
+        <item>@color/tag_cyan</item>
+        <item>@color/tag_coral</item>
+    </array>
+
+</resources>

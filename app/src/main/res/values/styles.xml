@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ===================== Shapes ===================== -->
+
+    <style name="ShapeAppearance.GeruPreco.Small" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_default</item>
+    </style>
+
+    <style name="ShapeAppearance.GeruPreco.Medium" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_md</item>
+    </style>
+
+    <style name="ShapeAppearance.GeruPreco.Large" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_lg</item>
+    </style>
+
+    <!-- ===================== Cards ===================== -->
+
+    <!-- Level 1 tonal layer: no shadow, separation comes from the surface shift -->
+    <style name="Widget.GeruPreco.Card" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">@color/surface_container</item>
+        <item name="cardCornerRadius">@dimen/radius_lg</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">@color/outline_variant</item>
+        <item name="strokeWidth">@dimen/card_stroke</item>
+        <item name="rippleColor">@color/primary_container</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.GeruPreco.Large</item>
+    </style>
+
+    <style name="Widget.GeruPreco.Card.Module">
+        <item name="cardCornerRadius">@dimen/radius_xl</item>
+    </style>
+
+    <!-- Recessed row container, one tonal step below a card -->
+    <style name="Widget.GeruPreco.Card.Row">
+        <item name="cardBackgroundColor">@color/surface_container_low</item>
+        <item name="cardCornerRadius">@dimen/radius_md</item>
+    </style>
+
+    <!-- ===================== Text fields ===================== -->
+
+    <style name="Widget.GeruPreco.EditText" parent="Widget.AppCompat.EditText">
+        <item name="android:background">@drawable/bg_edit_text_underline</item>
+        <item name="android:fontFamily">@font/plus_jakarta_sans_medium</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_medium</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/on_surface</item>
+        <item name="android:textColorHint">@color/outline</item>
+        <item name="android:paddingTop">@dimen/space_base</item>
+        <item name="android:paddingBottom">@dimen/space_base</item>
+        <item name="android:paddingLeft">0dp</item>
+        <item name="android:paddingRight">0dp</item>
+    </style>
+
+    <style name="Widget.GeruPreco.EditText.Filled">
+        <item name="android:background">@drawable/bg_edit_text_filled</item>
+        <item name="android:fontFamily">@font/plus_jakarta_sans_extrabold</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_extrabold</item>
+        <item name="android:paddingLeft">@dimen/space_stack_gap</item>
+        <item name="android:paddingRight">@dimen/space_stack_gap</item>
+        <item name="android:paddingTop">@dimen/space_stack_gap</item>
+        <item name="android:paddingBottom">@dimen/space_stack_gap</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <!-- Read-only result field: no border, mint value -->
+    <style name="Widget.GeruPreco.EditText.Filled.Result">
+        <item name="android:textColor">@color/primary_container</item>
+    </style>
+
+    <style name="Widget.GeruPreco.Spinner" parent="Widget.AppCompat.Spinner">
+        <item name="android:popupBackground">@drawable/bg_dialog</item>
+    </style>
+
+    <!-- ===================== Buttons ===================== -->
+
+    <style name="Widget.GeruPreco.Button.Text" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="rippleColor">@color/primary_container</item>
+    </style>
+
+    <!-- Level 2 elevation: mint FAB with a mint bloom instead of a grey shadow -->
+    <style name="Widget.GeruPreco.Fab" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="backgroundTint">@color/primary_container</item>
+        <item name="tint">@color/on_primary_container</item>
+        <item name="borderWidth">0dp</item>
+        <item name="elevation">12dp</item>
+        <item name="android:outlineAmbientShadowColor">@color/primary_container</item>
+        <item name="android:outlineSpotShadowColor">@color/primary_container</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.GeruPreco.Large</item>
+    </style>
+
+    <!-- ===================== App bar ===================== -->
+
+    <style name="TextAppearance.GeruPreco.ActionBar.Title" parent="TextAppearance.Material3.ActionBar.Title">
+        <item name="android:fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:textColor">@color/on_surface</item>
+    </style>
+
+    <style name="Widget.GeruPreco.ActionBar" parent="Widget.Material3.ActionBar.Solid">
+        <item name="background">@color/surface_container</item>
+        <item name="titleTextStyle">@style/TextAppearance.GeruPreco.ActionBar.Title</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="ThemeOverlay.GeruPreco.ActionBar" parent="ThemeOverlay.Material3.Dark.ActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorControlNormal">@color/on_surface_variant</item>
+        <item name="colorControlHighlight">@color/primary_container</item>
+        <item name="android:textColorPrimary">@color/on_surface</item>
+        <item name="android:textColorSecondary">@color/on_surface_variant</item>
+        <item name="android:textColorHint">@color/outline</item>
+        <item name="actionMenuTextColor">@color/on_surface</item>
+    </style>
+
+    <style name="Widget.GeruPreco.SearchView" parent="Widget.AppCompat.SearchView">
+        <item name="queryBackground">@android:color/transparent</item>
+        <item name="submitBackground">@android:color/transparent</item>
+        <item name="searchIcon">@drawable/ic_search_24</item>
+        <item name="closeIcon">@drawable/ic_close_24</item>
+        <item name="searchHintIcon">@null</item>
+    </style>
+
+    <!-- ===================== Dialogs ===================== -->
+
+    <style name="ThemeOverlay.GeruPreco.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="alertDialogStyle">@style/MaterialAlertDialog.GeruPreco</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.GeruPreco.Title.Text</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.GeruPreco.Button.Text</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.GeruPreco.Button.Text</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.GeruPreco.Button.Text</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorSurface">@color/surface_container</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="android:textColorPrimary">@color/on_surface</item>
+        <item name="android:textColorSecondary">@color/on_surface_variant</item>
+        <item name="android:fontFamily">@font/plus_jakarta_sans_medium</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_medium</item>
+    </style>
+
+    <style name="MaterialAlertDialog.GeruPreco" parent="MaterialAlertDialog.Material3">
+        <item name="backgroundTint">@color/surface_container</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.GeruPreco.Large</item>
+    </style>
+
+    <style name="MaterialAlertDialog.GeruPreco.Title.Text" parent="MaterialAlertDialog.Material3.Title.Text">
+        <item name="android:fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/on_surface</item>
+    </style>
+
+    <!-- AppCompat AlertDialog.Builder (GenericDialog) goes through alertDialogTheme -->
+    <style name="ThemeOverlay.GeruPreco.Dialog.Alert" parent="ThemeOverlay.Material3.Dialog.Alert">
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.GeruPreco.Button.Text</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.GeruPreco.Button.Text</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.GeruPreco.Button.Text</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorSurface">@color/surface_container</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="android:textColorPrimary">@color/on_surface</item>
+        <item name="android:textColorSecondary">@color/on_surface_variant</item>
+        <item name="android:fontFamily">@font/plus_jakarta_sans_medium</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_medium</item>
+    </style>
+
+    <!-- Framework dialogs (android.app.ProgressDialog) can't use Material styles -->
+    <style name="ThemeOverlay.GeruPreco.FrameworkDialog" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:colorBackground">@color/surface_container</item>
+        <item name="android:windowBackground">@drawable/bg_dialog</item>
+        <item name="android:textColorPrimary">@color/on_surface</item>
+        <item name="android:textColorSecondary">@color/on_surface_variant</item>
+        <item name="android:fontFamily">@font/plus_jakarta_sans_medium</item>
+    </style>
+
+</resources>

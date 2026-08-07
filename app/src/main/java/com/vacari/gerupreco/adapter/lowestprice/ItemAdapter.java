@@ -12,9 +12,12 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.chip.ChipGroup;
 import com.vacari.gerupreco.R;
 import com.vacari.gerupreco.activity.lowestprice.LowestPriceProduct;
 import com.vacari.gerupreco.model.firebase.Item;
+import com.vacari.gerupreco.util.StringUtil;
+import com.vacari.gerupreco.util.TagUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,15 +62,33 @@ public class ItemAdapter extends RecyclerView.Adapter {
         holder.description.setText(item.getDescription());
         holder.size.setText(item.getSize());
         holder.unitMeasure.setText(item.getUnitMeasure());
+
+        bindTags(holder, item);
     }
 
+    private void bindTags(ViewHolder holder, Item item) {
+        holder.tags.removeAllViews();
+
+        List<String> tags = TagUtil.distinctTags(item.getTags());
+        holder.tags.setVisibility(tags.isEmpty() ? View.GONE : View.VISIBLE);
+
+        for (String tag : tags) {
+            holder.tags.addView(TagUtil.createChip(mActivity, tag, false));
+        }
+    }
+
+    /**
+     * A busca ignora acentos e caixa, e considera tanto a descricao quanto as tags.
+     */
     public void filter(String query) {
+        String normalizedQuery = StringUtil.normalize(query);
+
         List<Item> filteredList = new ArrayList<>();
-        if (query.isEmpty()) {
+        if (normalizedQuery.isEmpty()) {
             filteredList.addAll(allItemList); // Se a consulta estiver vazia, mostra a lista completa
         } else {
             for (Item item : allItemList) {
-                if (item.getDescription().toLowerCase().contains(query.toLowerCase())) {
+                if (matches(item, normalizedQuery)) {
                     filteredList.add(item);
                 }
             }
@@ -76,6 +97,31 @@ public class ItemAdapter extends RecyclerView.Adapter {
         itemList.clear();
         itemList.addAll(filteredList);
         notifyDataSetChanged();
+    }
+
+    private boolean matches(Item item, String normalizedQuery) {
+        if (StringUtil.normalize(item.getDescription()).contains(normalizedQuery)) {
+            return true;
+        }
+
+        for (String tag : item.getTags()) {
+            if (StringUtil.normalize(tag).contains(normalizedQuery)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Todas as tags ja usadas, para sugerir no cadastro.
+     */
+    public List<String> getAllTags() {
+        List<String> tags = new ArrayList<>();
+        for (Item item : allItemList) {
+            tags.addAll(item.getTags());
+        }
+        return TagUtil.distinctTags(tags);
     }
 
     private void configureActions(ViewHolder holder, Item item) {
@@ -108,6 +154,7 @@ public class ItemAdapter extends RecyclerView.Adapter {
         final TextView description;
         final TextView size;
         final TextView unitMeasure;
+        final ChipGroup tags;
 
         public ViewHolder(View view) {
             super(view);
@@ -117,6 +164,7 @@ public class ItemAdapter extends RecyclerView.Adapter {
             description = view.findViewById(R.id.item_description);
             size = view.findViewById(R.id.item_size);
             unitMeasure = view.findViewById(R.id.item_unitMeasure);
+            tags = view.findViewById(R.id.item_tags);
         }
 
         @Override

@@ -32,6 +32,8 @@ public class LowestPriceProduct extends AppCompatActivity {
 
     private ItemAdapter mAdapter;
 
+    private SearchView searchView;
+
     private ActivityResultLauncher<ScanOptions> barcodeLauncher;
 
     @Override
@@ -74,7 +76,7 @@ public class LowestPriceProduct extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu, menu);
 
         MenuItem searchItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) searchItem.getActionView();
+        searchView = (SearchView) searchItem.getActionView();
 
         searchView.setQueryHint("Buscar...");
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -116,7 +118,19 @@ public class LowestPriceProduct extends AppCompatActivity {
         });
     }
 
+    /**
+     * Tira o foco da busca antes de abrir dialogo ou outra tela. Sem isto o
+     * SearchView reassume o foco quando a sobreposicao fecha e reexibe o teclado
+     * sozinho. O texto digitado e o filtro aplicado sao preservados.
+     */
+    private void clearSearchFocus() {
+        if (searchView != null) {
+            searchView.clearFocus();
+        }
+    }
+
     public void openScanBarCode() {
+        clearSearchFocus();
         ScanOptions options = new ScanOptions();
         // TODO realizar consulta na nota parana quando ler qrcode
 //        options.setDesiredBarcodeFormats(ScanOptions.EAN_13, ScanOptions.EAN_8);
@@ -127,6 +141,7 @@ public class LowestPriceProduct extends AppCompatActivity {
     }
 
     public void openLowestPrice(String barCode) {
+        clearSearchFocus();
         Intent intent = new Intent(this, LowestPriceActivity.class);
         intent.putExtra("BARCODE", barCode);
         startActivity(intent);
@@ -135,6 +150,13 @@ public class LowestPriceProduct extends AppCompatActivity {
     public void openNotification() {
         Intent intent = new Intent(LowestPriceProduct.this, NotificationActivity.class);
         startActivity(intent);
+    }
+
+    /**
+     * Tags ja usadas em qualquer produto, para sugerir no cadastro.
+     */
+    public java.util.List<String> getKnownTags() {
+        return mAdapter.getAllTags();
     }
 
     public boolean existProduct(String barCode) {
@@ -146,16 +168,19 @@ public class LowestPriceProduct extends AppCompatActivity {
     }
 
     public void deleteItem(int position) {
+        clearSearchFocus();
         Item item = mAdapter.getItemByPosition(position);
         GenericDialog.showConfirmDeleteDialog(this, data -> ItemRepository.delete(item.getId(), dat -> searchItems()));
     }
 
     public void createNotification(int position) {
+        clearSearchFocus();
         Item item = mAdapter.getItemByPosition(position);
         new CreateNotificationProductDialog(this, item).show();
     }
 
     public void editItem(int position) {
+        clearSearchFocus();
         Item item = mAdapter.getItemByPosition(position);
         new RegisterProductDialog(LowestPriceProduct.this, null, item).show();
     }

@@ -1,9 +1,108 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
+    <!--
+        Theme.GeruPreco — "Neon Utility Dark".
+        True-dark charcoal base, mint primary, soft purple secondary.
+        Hierarchy comes from tonal layering, not from shadows.
+    -->
     <style name="Base.Theme.GeruPreco" parent="Theme.Material3.Dark">
-        <!-- Customize your light theme here. -->
-        <item name="colorPrimary">@color/material_dynamic_tertiary20</item>
+
+        <!-- Primary (mint / teal) -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
+        <item name="colorPrimaryInverse">@color/inverse_primary</item>
+        <item name="colorPrimaryFixed">@color/primary_fixed</item>
+        <item name="colorPrimaryFixedDim">@color/primary_fixed_dim</item>
+        <item name="colorOnPrimaryFixed">@color/on_primary_fixed</item>
+        <item name="colorOnPrimaryFixedVariant">@color/on_primary_fixed_variant</item>
+
+        <!-- Secondary (soft purple) -->
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        <item name="colorSecondaryContainer">@color/secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/on_secondary_container</item>
+        <item name="colorSecondaryFixed">@color/secondary_fixed</item>
+        <item name="colorSecondaryFixedDim">@color/secondary_fixed_dim</item>
+        <item name="colorOnSecondaryFixed">@color/on_secondary_fixed</item>
+        <item name="colorOnSecondaryFixedVariant">@color/on_secondary_fixed_variant</item>
+
+        <!-- Tertiary -->
+        <item name="colorTertiary">@color/tertiary</item>
+        <item name="colorOnTertiary">@color/on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/on_tertiary_container</item>
+
+        <!-- Error -->
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/on_error</item>
+        <item name="colorErrorContainer">@color/error_container</item>
+        <item name="colorOnErrorContainer">@color/on_error_container</item>
+
+        <!-- Surfaces / tonal layering -->
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorOnBackground">@color/on_background</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="colorSurfaceInverse">@color/inverse_surface</item>
+        <item name="colorOnSurfaceInverse">@color/inverse_on_surface</item>
+        <item name="colorSurfaceDim">@color/surface_dim</item>
+        <item name="colorSurfaceBright">@color/surface_bright</item>
+        <item name="colorSurfaceContainerLowest">@color/surface_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/surface_container_highest</item>
+        <item name="colorOutline">@color/outline</item>
+        <item name="colorOutlineVariant">@color/outline_variant</item>
+        <item name="elevationOverlayEnabled">false</item>
+
+        <!-- Window chrome -->
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/surface_container</item>
+        <item name="android:navigationBarColor">@color/background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <!-- Typography -->
+        <item name="android:fontFamily">@font/plus_jakarta_sans</item>
+        <item name="fontFamily">@font/plus_jakarta_sans</item>
+        <item name="android:textColorHint">@color/outline</item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.GeruPreco.HeadlineXl</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.GeruPreco.HeadlineLg</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.GeruPreco.TitleMd</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.GeruPreco.BodyMd</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.GeruPreco.BodyMd</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.GeruPreco.BodySm</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.GeruPreco.LabelCaps</item>
+
+        <!-- Shapes -->
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.GeruPreco.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.GeruPreco.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.GeruPreco.Large</item>
+
+        <!-- App bar -->
+        <item name="actionBarStyle">@style/Widget.GeruPreco.ActionBar</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.GeruPreco.ActionBar</item>
+        <item name="searchViewStyle">@style/Widget.GeruPreco.SearchView</item>
+
+        <!-- Widgets -->
+        <item name="materialCardViewStyle">@style/Widget.GeruPreco.Card</item>
+        <item name="floatingActionButtonStyle">@style/Widget.GeruPreco.Fab</item>
+        <item name="editTextStyle">@style/Widget.GeruPreco.EditText</item>
+        <item name="android:editTextStyle">@style/Widget.GeruPreco.EditText</item>
+        <item name="spinnerStyle">@style/Widget.GeruPreco.Spinner</item>
+
+        <!-- Dialogs -->
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.GeruPreco.Dialog</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.GeruPreco.Dialog.Alert</item>
+        <item name="android:alertDialogTheme">@style/ThemeOverlay.GeruPreco.FrameworkDialog</item>
+
     </style>
 
     <style name="Theme.GeruPreco" parent="Base.Theme.GeruPreco" />
+
 </resources>

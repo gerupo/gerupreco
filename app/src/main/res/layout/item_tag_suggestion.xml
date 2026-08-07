@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Item do dropdown de sugestao de tags: cor explicita para nao herdar
+     texto escuro do tema padrao de popup sobre o fundo escuro do app. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="@dimen/space_gutter"
+    android:paddingVertical="@dimen/space_stack_gap"
+    android:textAppearance="@style/TextAppearance.GeruPreco.BodyMd"
+    android:textColor="@color/on_surface" />

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Spacing scale (8px base) from the "Neon Utility Dark" design system -->
+    <dimen name="space_base">8dp</dimen>
+    <dimen name="space_stack_gap">12dp</dimen>
+    <dimen name="space_gutter">16dp</dimen>
+    <dimen name="space_container_padding">20dp</dimen>
+    <dimen name="space_margin_x">24dp</dimen>
+
+    <!-- Corner radii -->
+    <dimen name="radius_sm">4dp</dimen>
+    <dimen name="radius_default">8dp</dimen>
+    <dimen name="radius_md">12dp</dimen>
+    <dimen name="radius_lg">16dp</dimen>
+    <dimen name="radius_xl">24dp</dimen>
+
+    <!-- Components -->
+    <dimen name="card_stroke">1dp</dimen>
+    <dimen name="module_icon_size">80dp</dimen>
+    <dimen name="module_icon_glyph">40dp</dimen>
+
+</resources>

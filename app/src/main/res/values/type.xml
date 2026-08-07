@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        Typography scale of the "Neon Utility Dark" design system.
+        Plus Jakarta Sans for structure, JetBrains Mono for utility labels.
+    -->
+
+    <style name="TextAppearance.GeruPreco.HeadlineXl" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:fontFamily">@font/plus_jakarta_sans_extrabold</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_extrabold</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:textColor">@color/on_surface</item>
+    </style>
+
+    <style name="TextAppearance.GeruPreco.HeadlineLg" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:textColor">@color/on_surface</item>
+    </style>
+
+    <style name="TextAppearance.GeruPreco.HeadlineLgMobile" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:textColor">@color/on_surface</item>
+    </style>
+
+    <style name="TextAppearance.GeruPreco.TitleMd" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_bold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/on_surface</item>
+    </style>
+
+    <style name="TextAppearance.GeruPreco.BodyMd" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/plus_jakarta_sans_medium</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_medium</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/on_surface</item>
+    </style>
+
+    <style name="TextAppearance.GeruPreco.BodySm" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:fontFamily">@font/plus_jakarta_sans_medium</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_medium</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+    </style>
+
+    <!-- Utility label: monospaced, uppercase, wide tracking -->
+    <style name="TextAppearance.GeruPreco.LabelCaps" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+    </style>
+
+    <style name="TextAppearance.GeruPreco.LabelCaps.Primary">
+        <item name="android:textColor">@color/primary_container</item>
+    </style>
+
+    <!-- Prices are always mint + extra bold -->
+    <style name="TextAppearance.GeruPreco.PriceDisplay" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">@font/plus_jakarta_sans_extrabold</item>
+        <item name="fontFamily">@font/plus_jakarta_sans_extrabold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/primary_container</item>
+    </style>
+
+    <style name="TextAppearance.GeruPreco.PriceDisplay.Large">
+        <item name="android:textSize">28sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+</resources>

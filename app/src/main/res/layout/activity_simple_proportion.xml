@@ -3,62 +3,89 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background"
     android:fitsSystemWindows="true">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingHorizontal="@dimen/space_margin_x"
+            android:paddingTop="@dimen/space_margin_x"
+            android:paddingBottom="96dp">
 
-            <TextView
+            <!-- Base proportion -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.GeruPreco.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Proporção Base"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:paddingBottom="8dp"/>
+                android:layout_marginBottom="@dimen/space_margin_x">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <EditText
-                    android:id="@+id/value1"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="Valor A"
-                    android:inputType="numberDecimal" />
+                    android:orientation="vertical"
+                    android:padding="@dimen/space_container_padding">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="está para"
-                    android:padding="8dp"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/space_margin_x"
+                        android:text="@string/base_proportion"
+                        android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps.Primary" />
 
-                <EditText
-                    android:id="@+id/value2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="Valor B"
-                    android:inputType="numberDecimal" />
-            </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="assim como"
-                android:padding="16dp"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                android:textStyle="italic"/>
+                        <EditText
+                            android:id="@+id/value1"
+                            style="@style/Widget.GeruPreco.EditText.Filled"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="@string/value_a"
+                            android:importantForAutofill="no"
+                            android:inputType="numberDecimal" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="@dimen/space_stack_gap"
+                            android:text="@string/is_to"
+                            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+                        <EditText
+                            android:id="@+id/value2"
+                            style="@style/Widget.GeruPreco.EditText.Filled"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="@string/value_b"
+                            android:importantForAutofill="no"
+                            android:inputType="numberDecimal" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_margin_x"
+                        android:gravity="center"
+                        android:text="@string/just_like"
+                        android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout
                 android:id="@+id/dynamicRowsContainer"
@@ -67,15 +94,17 @@
                 android:orientation="vertical" />
 
         </LinearLayout>
+
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnAddRow"
+        style="@style/Widget.GeruPreco.Fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        app:srcCompat="@android:drawable/ic_input_add"
-        android:contentDescription="Adicionar Linha" />
+        android:layout_margin="@dimen/space_margin_x"
+        android:contentDescription="@string/add_row"
+        app:srcCompat="@drawable/ic_add_24" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

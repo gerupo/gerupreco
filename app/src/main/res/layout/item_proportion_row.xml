@@ -1,40 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.GeruPreco.Card.Row"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:padding="8dp">
+    android:layout_marginBottom="@dimen/space_stack_gap">
 
-    <EditText
-        android:id="@+id/value3"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:hint="Valor"
-        android:inputType="numberDecimal" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/space_stack_gap">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="está para"
-        android:padding="8dp"/>
+        <EditText
+            android:id="@+id/value3"
+            style="@style/Widget.GeruPreco.EditText.Filled"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/value"
+            android:importantForAutofill="no"
+            android:inputType="numberDecimal"
+            android:textSize="16sp" />
 
-    <EditText
-        android:id="@+id/value4"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:enabled="false"
-        android:hint="Resultado"
-        android:inputType="numberDecimal" />
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginHorizontal="4dp"
+            android:contentDescription="@string/is_to"
+            android:src="@drawable/ic_arrow_forward_24"
+            app:tint="@color/on_surface_variant" />
 
-    <ImageButton
-        android:id="@+id/btnRemove"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_menu_delete"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Remover" />
+        <EditText
+            android:id="@+id/value4"
+            style="@style/Widget.GeruPreco.EditText.Filled.Result"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:enabled="false"
+            android:hint="@string/result"
+            android:importantForAutofill="no"
+            android:inputType="numberDecimal"
+            android:textSize="16sp" />
 
-</LinearLayout>
+        <ImageButton
+            android:id="@+id/btnRemove"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/remove"
+            android:padding="@dimen/space_base"
+            android:src="@drawable/ic_delete_24"
+            app:tint="@color/on_surface_variant" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

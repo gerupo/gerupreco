@@ -1,88 +1,136 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:id="@+id/main_layout">
+    android:background="@color/background"
+    android:fitsSystemWindows="true">
 
-    <GridLayout
-        android:id="@+id/gridLayout"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:columnCount="2"
-        android:rowCount="1"
-        android:padding="16dp"
-        android:layout_margin="8dp">
-
-        <!-- Card 1 -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_gerupreco"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_marginEnd="8dp"
-            android:radius="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <ImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:layout_gravity="center_horizontal"
-                    android:src="@drawable/baseline_world_search_48" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAlignment="center"
-                    android:text="GeruPreco" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Card 2 -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_gerometro"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:radius="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <ImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:layout_gravity="center_horizontal"
-                    android:src="@drawable/outline_blind_24" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAlignment="center"
-                    android:text="Gerrugra de 3" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-    </GridLayout>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Super GeruApp"
-        android:textAlignment="center"
-        android:textStyle="italic"
-        android:textSize="32dp"
-        android:textColor="@color/material_on_background_disabled"
         android:layout_centerInParent="true"
-        android:layout_centerHorizontal="true"/>
+        android:clipToPadding="false"
+        android:fillViewport="false"
+        android:paddingHorizontal="@dimen/space_margin_x"
+        android:paddingVertical="@dimen/space_margin_x"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Header -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                android:gravity="center"
+                android:text="@string/module_subtitle"
+                android:textAppearance="@style/TextAppearance.GeruPreco.BodyMd"
+                android:textColor="@color/on_surface_variant" />
+
+            <!-- GeruPreço -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_gerupreco"
+                style="@style/Widget.GeruPreco.Card.Module"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_stack_gap">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:padding="32dp">
+
+                    <ImageView
+                        android:layout_width="@dimen/module_icon_size"
+                        android:layout_height="@dimen/module_icon_size"
+                        android:layout_marginBottom="@dimen/space_margin_x"
+                        android:background="@drawable/bg_module_icon"
+                        android:contentDescription="@string/module_gerupreco"
+                        android:elevation="10dp"
+                        android:outlineAmbientShadowColor="@color/primary_container"
+                        android:outlineProvider="background"
+                        android:outlineSpotShadowColor="@color/primary_container"
+                        android:padding="20dp"
+                        android:src="@drawable/ic_payments_24"
+                        app:tint="@color/on_primary_container" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/space_base"
+                        android:gravity="center"
+                        android:text="@string/module_gerupreco"
+                        android:textAppearance="@style/TextAppearance.GeruPreco.HeadlineLg" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/module_gerupreco_description"
+                        android:textAppearance="@style/TextAppearance.GeruPreco.BodyMd"
+                        android:textColor="@color/on_surface_variant" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- GeruRegra -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_gerometro"
+                style="@style/Widget.GeruPreco.Card.Module"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:padding="32dp">
+
+                    <ImageView
+                        android:layout_width="@dimen/module_icon_size"
+                        android:layout_height="@dimen/module_icon_size"
+                        android:layout_marginBottom="@dimen/space_margin_x"
+                        android:background="@drawable/bg_module_icon"
+                        android:contentDescription="@string/module_geruregra"
+                        android:elevation="10dp"
+                        android:outlineAmbientShadowColor="@color/primary_container"
+                        android:outlineProvider="background"
+                        android:outlineSpotShadowColor="@color/primary_container"
+                        android:padding="20dp"
+                        android:src="@drawable/ic_calculate_24"
+                        app:tint="@color/on_primary_container" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/space_base"
+                        android:gravity="center"
+                        android:text="@string/module_geruregra"
+                        android:textAppearance="@style/TextAppearance.GeruPreco.HeadlineLg" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="@string/module_geruregra_description"
+                        android:textAppearance="@style/TextAppearance.GeruPreco.BodyMd"
+                        android:textColor="@color/on_surface_variant" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </RelativeLayout>

@@ -1,75 +1,129 @@
-<LinearLayout android:orientation="vertical"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_height="match_parent"
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:paddingRight="20dp"
-    android:paddingLeft="20dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="10dp"
-            android:text="Código de barras"
-            android:textSize="16dp"
-            android:textStyle="bold" />
-        <EditText
-            android:id="@+id/edit_barCode"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        </EditText>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="10dp"
-            android:text="Produto"
-            android:textSize="16dp"
-            android:textStyle="bold" />
-        <EditText
-            android:id="@+id/edit_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-        </EditText>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="10dp"
-        android:text="Tamanho"
-        android:textSize="16dp"
-        android:textStyle="bold" />
+    android:layout_height="wrap_content"
+    android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        >
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/space_container_padding"
+        android:paddingTop="@dimen/space_base"
+        android:paddingBottom="@dimen/space_base">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bar_code"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
 
         <EditText
-            android:id="@+id/edit_size"
+            android:id="@+id/edit_barCode"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingRight="20dp"
-            android:layout_weight="1"
-            android:inputType="numberDecimal"
-            >
-        </EditText>
+            android:layout_height="wrap_content"
+            android:importantForAutofill="no" />
 
-        <Spinner
-            android:id="@+id/edit_unitMeasure"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_container_padding"
+            android:text="@string/product"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+        <EditText
+            android:id="@+id/edit_description"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="0.8"/>
+            android:layout_height="wrap_content"
+            android:importantForAutofill="no" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_container_padding"
+            android:text="@string/size"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:gravity="bottom"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/edit_size"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:importantForAutofill="no"
+                android:inputType="numberDecimal" />
+
+            <!-- O Spinner precisa de largura folgada: o padding da seta consome
+                 ~55dp, e com pouco espaco unidades de 2 letras (ML, KG) nao cabem
+                 e deixam de ser desenhadas. -->
+            <Spinner
+                android:id="@+id/edit_unitMeasure"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_container_padding"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_container_padding"
+            android:text="@string/tags"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+        <!-- Tags ja escolhidas, cada uma removivel pelo X -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/edit_tags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_base"
+            app:chipSpacingHorizontal="6dp"
+            app:chipSpacingVertical="4dp"
+            app:singleLine="false" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_base"
+            android:baselineAligned="false"
+            android:gravity="bottom"
+            android:orientation="horizontal">
+
+            <AutoCompleteTextView
+                android:id="@+id/edit_tag_input"
+                style="@style/Widget.GeruPreco.EditText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:completionThreshold="1"
+                android:hint="@string/add_tag"
+                android:imeOptions="actionDone"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:popupBackground="@drawable/bg_dialog"
+                android:textSize="16sp" />
+
+            <ImageButton
+                android:id="@+id/btn_add_tag"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="@dimen/space_base"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/add_tag"
+                android:padding="@dimen/space_base"
+                android:src="@drawable/ic_add_24"
+                app:tint="@color/primary_container" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-</LinearLayout>
+</ScrollView>
