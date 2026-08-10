@@ -87,5 +87,11 @@
     <string name="cart_missing_more">%1$s e mais %2$d</string>
     <string name="cart_missing_price">não tem</string>
     <string name="cart_oldest_price">Preço mais antigo: %1$s</string>
+    <string name="cart_unit_price">Custo-benefício</string>
+    <string name="cart_unit_price_title">Preço por kg e litro</string>
+    <string name="cart_unit_price_empty">Nenhum produto do carrinho tem preço nesta janela de datas e tamanho cadastrado para comparar.</string>
+    <string name="cart_unit_price_value">%1$s / %2$s</string>
+    <string name="cart_unit_price_at">%1$s em %2$s</string>
+    <string name="cart_unit_price_fix">Cadastro incompleto</string>
 
 </resources>

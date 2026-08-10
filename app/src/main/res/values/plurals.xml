@@ -31,6 +31,11 @@
         <item quantity="other">%1$d produtos sem preço em nenhum estabelecimento: %2$s</item>
     </plurals>
 
+    <plurals name="cart_unmeasured">
+        <item quantity="one">%1$d produto sem tamanho válido no cadastro ficou de fora: %2$s. Edite o produto na lista e informe tamanho e unidade.</item>
+        <item quantity="other">%1$d produtos sem tamanho válido no cadastro ficaram de fora: %2$s. Edite os produtos na lista e informe tamanho e unidade.</item>
+    </plurals>
+
     <plurals name="cart_window_days">
         <item quantity="one">%1$d dia</item>
         <item quantity="other">%1$d dias</item>

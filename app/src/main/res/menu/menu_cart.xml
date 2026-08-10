@@ -8,6 +8,14 @@
         android:title="@string/cart_add_by_tag"
         app:showAsAction="ifRoom" />
 
+    <!-- Cedula, e nao etiqueta de preco: ao lado do icone de tags a etiqueta
+         tem a mesma silhueta e as duas acoes viram uma so -->
+    <item
+        android:id="@+id/menu_cart_unit_price"
+        android:icon="@drawable/ic_payments_24"
+        android:title="@string/cart_unit_price"
+        app:showAsAction="ifRoom" />
+
     <item
         android:id="@+id/menu_cart_clear"
         android:icon="@drawable/ic_delete_sweep_24"

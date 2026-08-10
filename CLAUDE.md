@@ -13,10 +13,12 @@ A interface é toda em **português**. Comentários e nomes de código também s
 
 ## Comandos
 
-O wrapper do Gradle é usado para tudo. **O JDK importa**: o projeto compila com `sourceCompatibility`/`targetCompatibility` **25**, e o JBR que acompanha o Android Studio é o único JDK 25 da máquina.
+O wrapper do Gradle é usado para tudo. **O JDK importa**: o projeto compila com `sourceCompatibility`/`targetCompatibility` **25**. O JDK 25 fica em `C:\Program Files\Java\jdk-25.0.4` (Oracle), e é para ele que `JAVA_HOME` aponta. O JBR que acompanha o Android Studio **não** serve — está no 17.
 
 ```powershell
-$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+# JAVA_HOME ja esta no ambiente do usuario; a linha abaixo so e necessaria
+# em shells herdados de um processo aberto antes da instalacao do JDK 25.
+$env:JAVA_HOME = "C:\Program Files\Java\jdk-25.0.4" ou "C:\Program Files\Android\Android Studio\jbr"
 
 .\gradlew.bat assembleDebug          # APK debug -> app/build/outputs/apk/debug/app-v<versionCode>-debug.apk
 .\gradlew.bat assembleRelease        # APK assinado com key.jks -> app/build/outputs/apk/release/app-v<versionCode>-release.apk
@@ -25,6 +27,8 @@ $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 ```
 
 Compilar com um JDK anterior falha com `error: invalid source release: 25`. No Android Studio isso é controlado por `.gradle/config.properties` (`java.home`), que **não** é versionado — cada máquina precisa apontar para um JDK 25.
+
+O SDK do Android também precisa estar localizável: não há `local.properties` versionado, então o build depende de `ANDROID_HOME` (`$env:LOCALAPPDATA\Android\Sdk`), senão falha com `SDK location not found`.
 
 Não há lint configurado além do padrão do AGP, nem testes instrumentados reais (`ExampleInstrumentedTest` é o esqueleto gerado).
 
@@ -53,7 +57,7 @@ Há ainda `NotificationRepository` para notificações de preço-alvo, mas **ess
 
 `MainActivity` → `LowestPriceProduct` (lista de produtos) → `LowestPriceActivity` (preços de um produto).
 `MainActivity` → `SimpleProportionActivity` (regra de três).
-`LowestPriceProduct` → `CartActivity` (carrinho) → `CartCompareActivity` (ranking de mercados).
+`LowestPriceProduct` → `CartActivity` (carrinho) → `CartCompareActivity` (ranking de mercados) e `CartUnitPriceActivity` (ranking de custo-benefício).
 
 ## Carrinho de compras
 
@@ -71,6 +75,21 @@ O `CartItem` guarda cópia de descrição/tamanho/unidade em vez de referenciar 
 - **Ordenação:** completos primeiro pelo menor total; depois os incompletos, primeiro os que menos deixam faltar, e só então pelo total parcial. Um total baixo não vale nada se veio de um mercado que tem metade da lista.
 - **Produto sem preço em lugar nenhum sai do cálculo de faltantes** e aparece num aviso à parte. Se contasse, jogaria todos os mercados para o grupo dos incompletos sem diferenciar ninguém.
 - **A mesma loja pode aparecer duas vezes** na resposta quando o GTIN está cadastrado com e sem zero à esquerda; vale o menor preço.
+
+### Custo-benefício — preço por quilo e por litro
+
+`CartUnitPrice` é lógica pura e testada (`CartUnitPriceTest`), aberta pelo ícone de cédula na action bar da `CartActivity`. Ranqueia os **produtos entre si**, não os mercados.
+
+- **A API não devolve o tamanho da embalagem.** `Product` traz descrição, valores, data, distância, GTIN e estabelecimento — nada de gramas ou mililitros. A única fonte é o `size`/`unitMeasure` do próprio catálogo, copiado para o `CartItem`.
+- **Normalizar não muda nada dentro de um mesmo produto.** A busca é por GTIN, e todas as ofertas de um GTIN têm o mesmo tamanho — dividir pelo volume dá a mesma ordem que o preço bruto. O que a divisão revela é a comparação **entre produtos diferentes**: a lata de 350 ml contra a garrafa de 1 L.
+- **Vale o menor preço de cada produto**, venha de onde vier. O estabelecimento entra só como referência na linha, porque aqui a comparação não é entre mercados.
+- **A quantidade do carrinho não entra na conta.** Seis latas não mudam o preço do litro.
+- **Peso e volume caem na mesma lista ordenada.** São grandezas diferentes e comparar R$/kg de arroz com R$/L de sabão não diz nada sozinho; a lista única foi pedida assim, e cada linha carrega o rótulo da unidade.
+- **Tamanho inválido sai como `unmeasured`, separado dos `unpriced`.** A ação é diferente: um se resolve no cadastro, o outro abrindo a janela de datas. Somar os dois mandaria o usuário procurar no lugar errado.
+- **`UnitMeasureUtil` repete a convenção do `PriceUtil`**: o ponto é decimal e só vira separador de milhar quando há vírgula na string. Sem isso `1.5 L` viraria 15 L. Como `size` é texto livre, a leitura também tolera `"500g"` e descarta o que não tiver número.
+- **`PriceWindow` centraliza os chips de janela de data** e a preferência, compartilhada com a `CartCompareActivity` — alternar entre as telas com janelas diferentes pareceria resultado inconsistente.
+
+O ícone é `ic_payments_24` (cédula), e **não** `ic_sell_24` (etiqueta de preço): ao lado do `ic_label_24` das tags, na mesma action bar, a etiqueta tem a mesma silhueta e as duas ações viram uma só.
 
 ### Preço vem como texto com ponto decimal
 
@@ -126,13 +145,13 @@ Tags são livres (o usuário digita), com sugestão a partir das já usadas em o
 
 Tema escuro com primária mint e secundária roxa. Hierarquia vem de **camadas tonais**, não de sombras. Os tokens ficam em `res/values/`:
 
-| Arquivo | Conteúdo |
-|---|---|
-| `colors.xml` | paleta completa (surfaces, primary, secondary, outline) |
-| `type.xml` | `TextAppearance.GeruPreco.*` |
-| `styles.xml` | cards, campos, FAB, action bar, diálogos, shapes |
-| `dimens.xml` | escala de 8px (`space_*`) e raios (`radius_*`) |
-| `tag_colors.xml` | paleta das tags |
+| Arquivo          | Conteúdo                                                |
+| ---------------- | ------------------------------------------------------- |
+| `colors.xml`     | paleta completa (surfaces, primary, secondary, outline) |
+| `type.xml`       | `TextAppearance.GeruPreco.*`                            |
+| `styles.xml`     | cards, campos, FAB, action bar, diálogos, shapes        |
+| `dimens.xml`     | escala de 8px (`space_*`) e raios (`radius_*`)          |
+| `tag_colors.xml` | paleta das tags                                         |
 
 Fontes **Plus Jakarta Sans** (estrutura) e **JetBrains Mono** (rótulos utilitários em caixa alta) estão embutidas em `res/font/`. Preferir os estilos existentes a declarar cor, tamanho e fonte soltos no layout.
 
@@ -170,6 +189,23 @@ Notas que economizam tempo:
 - As Activities além da `MainActivity` são `exported="false"`; `am start` direto falha com `SecurityException`. É preciso navegar pela UI.
 - Um elemento pode existir na hierarquia com o texto certo e mesmo assim **não ser desenhado**. Quando a suspeita for essa, ler os pixels da região (`System.Drawing.Bitmap.GetPixel`) distingue "não renderizado" de "renderizado sem contraste".
 - Long press: `input swipe <x> <y> <x> <y> 900`.
+
+### Conectar o aparelho por Wi-Fi
+
+Pareamento e conexão usam **portas diferentes**: a do diálogo "Parear com código" só serve para o `adb pair`, e a de conexão é outra.
+
+```powershell
+& $adb pair 192.168.3.91:<porta-do-pareamento> <codigo-de-6-digitos>
+
+# O mDNS padrao falha com "mdns daemon unavailable"; o backend interno resolve
+$env:ADB_MDNS_OPENSCREEN = "1"
+& $adb kill-server; & $adb start-server
+& $adb mdns services        # descobre o IP:porta de _adb-tls-connect._tcp
+& $adb connect 192.168.3.91:<porta-de-conexao>
+```
+
+- **O aparelho recusa injeção de eventos.** `input tap` estoura `SecurityException: INJECT_EVENTS` — trava da HyperOS/MIUI. Leitura funciona (`uiautomator dump`, `screencap`), mas dirigir a UI exige ligar **Opções do desenvolvedor → Depuração USB (Configurações de segurança)**, que no Xiaomi pede conta Mi e chip com dados. Sem isso, a alternativa é pedir para o usuário navegar e só ler a tela.
+- **O aparelho tem a *release* instalada.** Instalar a debug por cima falha com `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (chaves diferentes), e desinstalar antes apagaria o carrinho em SQLite e as preferências. Para testar sem perder dados, gere e instale a **release**.
 
 ## Publicar uma versão
 

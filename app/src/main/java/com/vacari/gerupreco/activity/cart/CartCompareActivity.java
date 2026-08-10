@@ -6,14 +6,11 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
 import com.vacari.gerupreco.R;
 import com.vacari.gerupreco.adapter.cart.MarketQuoteAdapter;
 import com.vacari.gerupreco.model.cart.CartComparison;
@@ -22,6 +19,7 @@ import com.vacari.gerupreco.model.sqlite.CartItem;
 import com.vacari.gerupreco.repository.CartRepository;
 import com.vacari.gerupreco.retrofit.CartPriceLoader;
 import com.vacari.gerupreco.util.CartCompare;
+import com.vacari.gerupreco.util.PriceWindow;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,18 +35,12 @@ import java.util.Map;
  */
 public class CartCompareActivity extends AppCompatActivity {
 
-    private static final String PREFS = "cart_compare";
-    private static final String PREF_WINDOW = "window_days";
-    private static final int DEFAULT_WINDOW = 7;
-
-    private static final int[] WINDOW_DAYS = {1, 2, 3, 7, 15, 30, CartCompare.ANY_AGE};
-
     private MarketQuoteAdapter mAdapter;
     private ProgressDialog progressDialog;
 
     private List<CartItem> cartItems = new ArrayList<>();
     private Map<String, List<Product>> prices = new HashMap<>();
-    private int windowDays = DEFAULT_WINDOW;
+    private int windowDays;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,10 +48,14 @@ public class CartCompareActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cart_compare);
         setTitle(R.string.cart_compare_title);
 
-        windowDays = getSharedPreferences(PREFS, MODE_PRIVATE).getInt(PREF_WINDOW, DEFAULT_WINDOW);
+        windowDays = PriceWindow.load(this);
 
         initGUI();
-        buildWindowChips();
+        PriceWindow.buildChips(this, findViewById(R.id.compare_window_group), windowDays,
+                days -> {
+                    windowDays = days;
+                    render();
+                });
         load();
     }
 
@@ -69,44 +65,6 @@ public class CartCompareActivity extends AppCompatActivity {
         mAdapter = new MarketQuoteAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
-    }
-
-    private void buildWindowChips() {
-        ChipGroup group = findViewById(R.id.compare_window_group);
-
-        for (int days : WINDOW_DAYS) {
-            Chip chip = new Chip(this);
-            chip.setId(View.generateViewId());
-            chip.setText(windowLabel(days));
-            chip.setTag(days);
-            chip.setCheckable(true);
-            chip.setChecked(days == windowDays);
-            chip.setTextAppearanceResource(R.style.TextAppearance_GeruPreco_LabelCaps);
-            // Cor por estado, senao o chip marcado fica igual aos outros.
-            chip.setChipBackgroundColor(
-                    ContextCompat.getColorStateList(this, R.color.chip_window_background));
-            chip.setTextColor(
-                    ContextCompat.getColorStateList(this, R.color.chip_window_text));
-            chip.setChipStrokeWidth(0f);
-            chip.setCheckedIconVisible(false);
-            chip.setEnsureMinTouchTargetSize(false);
-
-            chip.setOnClickListener(view -> {
-                windowDays = (int) view.getTag();
-                getSharedPreferences(PREFS, MODE_PRIVATE).edit()
-                        .putInt(PREF_WINDOW, windowDays).apply();
-                render();
-            });
-
-            group.addView(chip);
-        }
-    }
-
-    private String windowLabel(int days) {
-        if (days == CartCompare.ANY_AGE) {
-            return getString(R.string.cart_window_any);
-        }
-        return getResources().getQuantityString(R.plurals.cart_window_days, days, days);
     }
 
     private void load() {

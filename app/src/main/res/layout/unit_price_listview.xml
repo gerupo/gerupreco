@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Um produto do carrinho no ranking de custo-beneficio -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.GeruPreco.Card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/space_stack_gap">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/space_gutter">
+
+        <TextView
+            android:id="@+id/unit_price_rank"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_rank"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps"
+            android:textColor="@color/on_surface" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_stack_gap"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/unit_price_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+            <!-- Tamanho, preco da embalagem e onde foi achado -->
+            <TextView
+                android:id="@+id/unit_price_detail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+        </LinearLayout>
+
+        <!-- Preco por quilo ou litro: e por ele que a lista esta ordenada -->
+        <TextView
+            android:id="@+id/unit_price_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_base"
+            android:text="@string/price_placeholder"
+            android:textAppearance="@style/TextAppearance.GeruPreco.PriceDisplay" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

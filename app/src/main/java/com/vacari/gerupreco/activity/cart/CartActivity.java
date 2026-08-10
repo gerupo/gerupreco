@@ -55,7 +55,7 @@ public class CartActivity extends AppCompatActivity {
 
     private void configureActions() {
         MaterialButton compare = findViewById(R.id.cart_compare);
-        compare.setOnClickListener(view -> openCompare());
+        compare.setOnClickListener(view -> open(CartCompareActivity.class));
     }
 
     private void refresh() {
@@ -93,12 +93,24 @@ public class CartActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    /**
+     * "Adicionar por tag" continua visivel com o carrinho vazio - e por ela que
+     * ele se enche. As outras duas nao teriam o que fazer.
+     */
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean hasItems = mAdapter.getItemCount() > 0;
+
         MenuItem clear = menu.findItem(R.id.menu_cart_clear);
         if (clear != null) {
-            clear.setVisible(mAdapter.getItemCount() > 0);
+            clear.setVisible(hasItems);
         }
+
+        MenuItem unitPrice = menu.findItem(R.id.menu_cart_unit_price);
+        if (unitPrice != null) {
+            unitPrice.setVisible(hasItems);
+        }
+
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -111,6 +123,11 @@ public class CartActivity extends AppCompatActivity {
 
         if (item.getItemId() == R.id.menu_cart_add_by_tag) {
             openAddByTag();
+            return true;
+        }
+
+        if (item.getItemId() == R.id.menu_cart_unit_price) {
+            open(CartUnitPriceActivity.class);
             return true;
         }
 
@@ -162,11 +179,11 @@ public class CartActivity extends AppCompatActivity {
         refresh();
     }
 
-    private void openCompare() {
+    private void open(Class<?> activity) {
         if (mAdapter.getItemCount() == 0) {
             Toast.makeText(this, R.string.cart_empty, Toast.LENGTH_SHORT).show();
             return;
         }
-        startActivity(new Intent(this, CartCompareActivity.class));
+        startActivity(new Intent(this, activity));
     }
 }

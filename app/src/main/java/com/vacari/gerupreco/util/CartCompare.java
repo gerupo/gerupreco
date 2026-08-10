@@ -129,7 +129,8 @@ public class CartCompare {
         };
     }
 
-    private static boolean accepts(Product product, Date cutoff) {
+    // Visivel no pacote: o ranking de custo-beneficio recorta a mesma janela.
+    static boolean accepts(Product product, Date cutoff) {
         if (cutoff == null) {
             return true;
         }
@@ -137,7 +138,7 @@ public class CartCompare {
         return product.getDatahora() != null && !product.getDatahora().before(cutoff);
     }
 
-    private static Date cutoffDate(int maxAgeDays) {
+    static Date cutoffDate(int maxAgeDays) {
         if (maxAgeDays == ANY_AGE) {
             return null;
         }

@@ -13,19 +13,17 @@
     <string name="changelog_dismiss">Entendi</string>
 
     <string-array name="changelog_titles">
-        <item>Carrinho de compras</item>
-        <item>Onde a lista sai mais barata</item>
-        <item>Quem não tem tudo</item>
-        <item>Filtro por data do preço</item>
-        <item>Mais produtos na tela</item>
+        <item>Preço por quilo e por litro</item>
+        <item>A lata barata que sai cara</item>
+        <item>Cadastro sem tamanho fica avisado</item>
+        <item>A janela de datas vale para as duas telas</item>
     </string-array>
 
     <string-array name="changelog_descriptions">
-        <item>Segure um produto na lista para adicionar ao carrinho, ou jogue todos de uma tag de uma vez. Cada item tem quantidade própria.</item>
-        <item>O carrinho consulta o preço de cada produto e ordena os estabelecimentos pelo total da compra, do mais barato ao mais caro.</item>
-        <item>Mercados sem todos os produtos aparecem depois dos completos, mostrando exatamente o que está faltando em cada um.</item>
-        <item>Escolha considerar só preços do último dia, dos últimos 7 dias, ou de qualquer data. A ordenação muda na hora.</item>
-        <item>As listas ganharam espaço nas laterais e a descrição dos produtos ficou mais compacta, cabendo mais itens por tela.</item>
+        <item>O carrinho ganhou o botão da cédula, no topo. Ele busca o preço de cada produto e mostra quanto custa o quilo ou o litro de cada um, do mais barato ao mais caro.</item>
+        <item>É a comparação que o preço da etiqueta esconde: a lata de 350 ml por R$ 3,50 sai a R$ 10,00 o litro, enquanto a garrafa de 1 litro por R$ 8,00 sai por R$ 8,00.</item>
+        <item>Produto sem tamanho ou unidade cadastrados não tem como entrar na conta. Em vez de sumir da lista, ele aparece num aviso dizendo qual editar.</item>
+        <item>Escolher "últimos 7 dias" numa tela passa a valer na outra também, para os números das duas contarem sempre a mesma história.</item>
     </string-array>
 
 </resources>
