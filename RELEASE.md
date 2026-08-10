@@ -9,7 +9,7 @@ Guia operacional para um agente de IA publicar uma nova versão. O app **não es
 | Campo | Exemplo |
 |---|---|
 | `versionCode` | `13` |
-| `url` | `https://github.com/tjvacari/gerupreco/raw/refs/heads/main/app/release/app-v13-release.apk` |
+| `url` | `https://github.com/gerupo/gerupreco/raw/refs/heads/main/app/release/app-v13-release.apk` |
 
 Na abertura do app, `UpdateJob.checkVerisonCode()` compara o `versionCode` instalado com o do Firestore:
 
@@ -27,14 +27,15 @@ Se o `versionCode` subir no Firestore antes do APK estar acessível no GitHub, t
 ## Pré-requisitos
 
 ```powershell
-# O projeto compila com Java 25; o JBR do Android Studio é o único JDK 25 da máquina
+# O projeto compila com Java 25, entao JAVA_HOME precisa apontar para um JDK 25.
+# Nesta maquina o unico e o JBR do Android Studio (OpenJDK 25.0.2).
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 
 # git não está no PATH; vem embutido no GitHub Desktop
 $git = "C:\Users\vacar\AppData\Local\GitHubDesktop\app-3.6.3\resources\app\git\cmd\git.exe"
 ```
 
-Confira o número da versão do GitHub Desktop — ele muda a cada atualização do app.
+Confirme a versão antes de confiar no caminho — `& "$env:JAVA_HOME\bin\java.exe" -version` tem de dizer 25. Com JDK anterior o build falha com `error: invalid source release: 25`. Confira também o número da versão do GitHub Desktop, que muda a cada atualização do app.
 
 > **Ao editar arquivos deste repositório por linha de comando, cuidado com acentuação.** No PowerShell 5.1, `Get-Content -Raw` lê em ANSI e `Set-Content -Encoding utf8` grava em UTF-8: a combinação corrompe todo texto acentuado. Prefira ferramentas de edição de arquivo a manipulação de string no shell.
 
@@ -156,7 +157,7 @@ O push pode falhar com `could not read Username for 'https://github.com'` num te
 ### 9. Confirmar que a URL responde
 
 ```powershell
-$url = "https://github.com/tjvacari/gerupreco/raw/refs/heads/main/app/release/app-v13-release.apk"
+$url = "https://github.com/gerupo/gerupreco/raw/refs/heads/main/app/release/app-v13-release.apk"
 $r = Invoke-WebRequest $url -Method Head -MaximumRedirection 5
 "$($r.StatusCode) - $([math]::Round($r.Headers.'Content-Length'[0]/1MB,2)) MB"
 ```
@@ -175,7 +176,7 @@ $doc = (Invoke-RestMethod "https://firestore.googleapis.com/v1/projects/geruprec
 
 $body = @{ fields = @{
     versionCode = @{ integerValue = "13" }
-    url = @{ stringValue = "https://github.com/tjvacari/gerupreco/raw/refs/heads/main/app/release/app-v13-release.apk" }
+    url = @{ stringValue = "https://github.com/gerupo/gerupreco/raw/refs/heads/main/app/release/app-v13-release.apk" }
 } } | ConvertTo-Json -Depth 5
 
 $uri = "https://firestore.googleapis.com/v1/$($doc.name)?key=$key" +
