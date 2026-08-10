@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Uma novidade da versao -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
+    android:paddingBottom="@dimen/space_gutter">
+
+    <View
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="9dp"
+        android:layout_marginEnd="@dimen/space_stack_gap"
+        android:background="@drawable/bg_badge" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/changelog_item_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+        <TextView
+            android:id="@+id/changelog_item_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+    </LinearLayout>
+
+</LinearLayout>

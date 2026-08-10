@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Novidades exibidas uma unica vez apos atualizar o app.
+
+    Ao publicar uma versao nova, reescreva os dois arrays com o que mudou.
+    Eles sao paralelos: o titulo da posicao N descreve o item da posicao N.
+    Deixar os dois vazios desliga a tela de novidades daquela versao.
+-->
+<resources>
+
+    <string name="changelog_title">Novidades</string>
+    <string name="changelog_version">Versão %1$s</string>
+    <string name="changelog_dismiss">Entendi</string>
+
+    <string-array name="changelog_titles">
+        <item>Carrinho de compras</item>
+        <item>Onde a lista sai mais barata</item>
+        <item>Quem não tem tudo</item>
+        <item>Filtro por data do preço</item>
+        <item>Mais produtos na tela</item>
+    </string-array>
+
+    <string-array name="changelog_descriptions">
+        <item>Segure um produto na lista para adicionar ao carrinho, ou jogue todos de uma tag de uma vez. Cada item tem quantidade própria.</item>
+        <item>O carrinho consulta o preço de cada produto e ordena os estabelecimentos pelo total da compra, do mais barato ao mais caro.</item>
+        <item>Mercados sem todos os produtos aparecem depois dos completos, mostrando exatamente o que está faltando em cada um.</item>
+        <item>Escolha considerar só preços do último dia, dos últimos 7 dias, ou de qualquer data. A ordenação muda na hora.</item>
+        <item>As listas ganharam espaço nas laterais e a descrição dos produtos ficou mais compacta, cabendo mais itens por tela.</item>
+    </string-array>
+
+</resources>

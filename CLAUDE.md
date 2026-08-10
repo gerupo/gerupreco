@@ -76,6 +76,12 @@ O `CartItem` guarda cópia de descrição/tamanho/unidade em vez de referenciar 
 
 `PriceUtil.parse` trata `"4.50"` como 4,50. Aplicar a regra pt-BR (ponto = milhar) transformava `3.11` em `311` e os totais saíam cem vezes maiores — o bug passou por revisão de código e só apareceu no aparelho. A vírgula só é considerada separador decimal quando de fato aparece na string.
 
+### Novidades da versão
+
+`ChangelogDialog.showIfNeeded()` exibe o que mudou, uma única vez por `versionCode`, com o controle guardado em `SharedPreferences`. O texto vive em `res/values/changelog.xml`, em dois `string-array` paralelos (títulos e descrições), reescritos a cada release.
+
+É chamado de dentro de `MainActivity.configureActions()`, **não** do `onCreate`, pelo mesmo motivo do gate abaixo: só faz sentido mostrar novidades depois que a versão foi validada. A preferência é gravada **antes** de exibir o diálogo, porque o listener do Firestore pode chamar `configureActions()` mais de uma vez e empilharia diálogos.
+
 ### Gate de versão — não é bug
 
 `MainActivity.configureActions()` **não** é chamado no `onCreate`. Quem chama é `UpdateJob.checkVerisonCode()`, e só quando a versão instalada está em dia com o documento `appVersion` do Firestore. Estando desatualizada, aparece o diálogo de atualização e os cards da tela inicial permanecem inertes. Isso é intencional: bloqueia o uso do app em versões antigas. **Não "conserte" adicionando a chamada no `onCreate`.**

@@ -9,13 +9,13 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.vacari.gerupreco.R;
 import com.vacari.gerupreco.adapter.cart.CartAdapter;
 import com.vacari.gerupreco.dialog.cart.AddByTagDialog;
@@ -141,7 +141,7 @@ public class CartActivity extends AppCompatActivity {
     }
 
     private void confirmClear() {
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.cart_clear)
                 .setMessage(R.string.cart_clear_confirm)
                 .setPositiveButton(R.string.cart_clear, (dialog, which) -> {

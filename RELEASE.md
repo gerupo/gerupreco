@@ -36,6 +36,8 @@ $git = "C:\Users\vacar\AppData\Local\GitHubDesktop\app-3.6.3\resources\app\git\c
 
 Confira o número da versão do GitHub Desktop — ele muda a cada atualização do app.
 
+> **Ao editar arquivos deste repositório por linha de comando, cuidado com acentuação.** No PowerShell 5.1, `Get-Content -Raw` lê em ANSI e `Set-Content -Encoding utf8` grava em UTF-8: a combinação corrompe todo texto acentuado. Prefira ferramentas de edição de arquivo a manipulação de string no shell.
+
 ## Passo a passo
 
 ### 1. Subir o versionCode
@@ -48,7 +50,27 @@ def appVersionCode = 13   // era 12
 
 Ela alimenta `versionCode` e o `archivesName` (`app-v13`), então o nome do arquivo sai correto sozinho. O `versionName` (`3.1.1`) é cosmético e só muda se você quiser.
 
-### 2. Rodar os testes
+### 2. Escrever as novidades da versão
+
+Ao abrir o app pela primeira vez depois de atualizar, o usuário vê um diálogo com o que mudou. O conteúdo está em `app/src/main/res/values/changelog.xml`, em dois arrays **paralelos**:
+
+```xml
+<string-array name="changelog_titles">
+    <item>Título curto da novidade</item>
+</string-array>
+
+<string-array name="changelog_descriptions">
+    <item>Uma ou duas frases explicando, na perspectiva de quem usa.</item>
+</string-array>
+```
+
+**Reescreva os dois a cada versão** — eles descrevem só a versão atual, não o histórico. A posição N de um corresponde à N do outro; deixar os dois vazios desliga o diálogo naquela versão.
+
+Escreva do ponto de vista de quem usa ("Segure um produto para adicionar ao carrinho"), não do código ("adicionado CartRepository"). Bugs que nunca chegaram a ser publicados não são novidade para ninguém — não os liste.
+
+O controle é por `versionCode` em `SharedPreferences` (`ChangelogDialog`): o diálogo reaparece sozinho quando o `versionCode` instalado passa do valor guardado. Não há nada a resetar manualmente.
+
+### 3. Rodar os testes
 
 ```powershell
 .\gradlew.bat testDebugUnitTest
@@ -56,7 +78,7 @@ Ela alimenta `versionCode` e o `archivesName` (`app-v13`), então o nome do arqu
 
 Não publique com teste vermelho. `CartCompareTest` cobre a lógica de ranking do carrinho, que é fácil de quebrar sem perceber.
 
-### 3. Gerar o APK assinado
+### 4. Gerar o APK assinado
 
 ```powershell
 .\gradlew.bat clean assembleRelease
@@ -66,7 +88,7 @@ Sai em `app/build/outputs/apk/release/app-v13-release.apk`.
 
 A assinatura é automática: existe um `signingConfigs.release` em `app/build.gradle` apontando para `key.jks` na raiz (alias `gerupreco`, senha `facada123`, a mesma em `readmeKey.txt`).
 
-### 4. Conferir a assinatura
+### 5. Conferir a assinatura
 
 **Não pule.** Se o certificado divergir do da versão anterior, o Android recusa a instalação por cima e o usuário fica travado no diálogo de atualização.
 
@@ -85,7 +107,7 @@ O `SHA-256 digest` das duas tem de ser **idêntico**. O esperado é:
 CN=Thiago Vacari, L=Cascavel, ST=Pr
 ```
 
-### 5. Publicar o APK na pasta versionada
+### 6. Publicar o APK na pasta versionada
 
 A URL do Firestore aponta para `app/release/`, que **é versionado no git** — não é a saída do Gradle.
 
@@ -100,9 +122,9 @@ Mantenha os APKs antigos: são o caminho de rollback.
 
 > `Copy-Item` de uma pasta que já existe no destino **aninha** em vez de mesclar (`baselineProfiles\baselineProfiles\...`). Copie os arquivos `.dm` individualmente, como acima.
 
-### 6. Testar o APK assinado no aparelho
+### 7. Testar o APK assinado no aparelho
 
-Teste **a release**, não a debug — é ela que vai para o usuário.
+Teste **a release**, não a debug — é ela que vai para o usuário. As duas têm chaves diferentes, então instalar uma por cima da outra falha com `INSTALL_FAILED_UPDATE_INCOMPATIBLE`; desinstale antes se precisar trocar.
 
 ```powershell
 $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
@@ -111,7 +133,7 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 & $adb shell monkey -p com.vacari.gerupreco -c android.intent.category.LAUNCHER 1
 ```
 
-Confirme que os cards da home respondem ao toque (o gate liberou) e exercite o fluxo que mudou. Depois cheque se não houve crash:
+Confirme que os cards da home respondem ao toque (o gate liberou), que o diálogo de novidades aparece, e exercite o fluxo que mudou. Feche o app com `am force-stop` e reabra: as novidades **não** podem reaparecer. Depois cheque se não houve crash:
 
 ```powershell
 & $adb logcat -d -b crash | Select-String "gerupreco"
@@ -119,7 +141,7 @@ Confirme que os cards da home respondem ao toque (o gate liberou) e exercite o f
 
 Detalhes de como dirigir o app por adb estão no `CLAUDE.md`.
 
-### 7. Commitar e **empurrar**
+### 8. Commitar e **empurrar**
 
 ```powershell
 & $git add -A
@@ -129,7 +151,9 @@ Detalhes de como dirigir o app por adb estão no `CLAUDE.md`.
 
 O push é **obrigatório** antes do Firestore: a URL aponta para `refs/heads/main` no GitHub.
 
-### 8. Confirmar que a URL responde
+O push pode falhar com `could not read Username for 'https://github.com'` num terminal não interativo: o token do GitHub Desktop não fica acessível ao git de linha de comando. Nesse caso, empurre pela interface do GitHub Desktop e **só depois** siga para o passo 9.
+
+### 9. Confirmar que a URL responde
 
 ```powershell
 $url = "https://github.com/tjvacari/gerupreco/raw/refs/heads/main/app/release/app-v13-release.apk"
@@ -139,7 +163,7 @@ $r = Invoke-WebRequest $url -Method Head -MaximumRedirection 5
 
 Tem que voltar **200** e o tamanho tem que bater com o arquivo local (~24,5 MB). O GitHub leva alguns segundos para servir o blob depois do push; se der 404, espere e repita.
 
-### 9. Só agora: atualizar o Firestore
+### 10. Só agora: atualizar o Firestore
 
 Sem autenticação — as regras são públicas e a chave está em `app/google-services.json`.
 
@@ -162,9 +186,9 @@ Invoke-RestMethod $uri -Method Patch -Body $body -ContentType "application/json"
 
 **Sempre use `updateMask.fieldPaths`.** Sem ele o PATCH substitui o documento inteiro.
 
-`versionCode` é `integerValue` e o valor vai **como string** no JSON — é assim que a API REST do Firestore representa inteiros. Mandar `integerValue = 13` sem aspas funciona no PowerShell, mas gravar como `stringValue` quebra o `UpdateJob`, que desserializa para `int`.
+`versionCode` é `integerValue` e o valor vai **como string** no JSON — é assim que a API REST do Firestore representa inteiros. Gravar como `stringValue` quebra o `UpdateJob`, que desserializa para `int`.
 
-### 10. Validar em produção
+### 11. Validar em produção
 
 ```powershell
 (Invoke-RestMethod "https://firestore.googleapis.com/v1/projects/gerupreco/databases/(default)/documents/appVersion?key=$key").documents[0].fields

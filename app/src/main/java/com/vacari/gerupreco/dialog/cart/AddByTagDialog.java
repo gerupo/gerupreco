@@ -9,6 +9,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.vacari.gerupreco.R;
 import com.vacari.gerupreco.model.firebase.Item;
 import com.vacari.gerupreco.repository.CartRepository;
@@ -45,7 +46,7 @@ public class AddByTagDialog {
         View view = LayoutInflater.from(mActivity).inflate(R.layout.dialog_add_by_tag, null);
         LinearLayout container = view.findViewById(R.id.tag_pick_container);
 
-        AlertDialog dialog = new AlertDialog.Builder(mActivity)
+        AlertDialog dialog = new MaterialAlertDialogBuilder(mActivity)
                 .setTitle(R.string.cart_add_by_tag)
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)

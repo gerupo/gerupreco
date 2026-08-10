@@ -10,6 +10,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.vacari.gerupreco.R;
 import com.vacari.gerupreco.activity.lowestprice.LowestPriceProduct;
 import com.vacari.gerupreco.activity.simpleproportion.SimpleProportionActivity;
+import com.vacari.gerupreco.dialog.ChangelogDialog;
 import com.vacari.gerupreco.update.UpdateJob;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,6 +32,11 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, LowestPriceProduct.class);
             startActivity(intent);
         });
+
+        // Aqui, e nao no onCreate: este e o ponto em que a versao ja foi
+        // validada e o app esta liberado. Com a versao desatualizada quem
+        // ocupa a tela e o dialogo de atualizacao.
+        ChangelogDialog.showIfNeeded(this);
     }
 
 }
