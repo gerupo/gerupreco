@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -18,11 +20,13 @@ import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
 import com.vacari.gerupreco.R;
 import com.vacari.gerupreco.activity.MainActivity;
+import com.vacari.gerupreco.activity.cart.CartActivity;
 import com.vacari.gerupreco.adapter.lowestprice.ItemAdapter;
 import com.vacari.gerupreco.dialog.lowestprice.CreateNotificationProductDialog;
 import com.vacari.gerupreco.dialog.GenericDialog;
 import com.vacari.gerupreco.dialog.lowestprice.RegisterProductDialog;
 import com.vacari.gerupreco.model.firebase.Item;
+import com.vacari.gerupreco.repository.CartRepository;
 import com.vacari.gerupreco.repository.ItemRepository;
 import com.vacari.gerupreco.update.UpdateJob;
 
@@ -33,6 +37,8 @@ public class LowestPriceProduct extends AppCompatActivity {
     private ItemAdapter mAdapter;
 
     private SearchView searchView;
+
+    private View cartActionView;
 
     private ActivityResultLauncher<ScanOptions> barcodeLauncher;
 
@@ -72,6 +78,12 @@ public class LowestPriceProduct extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        updateCartBadge();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
 
@@ -92,6 +104,12 @@ public class LowestPriceProduct extends AppCompatActivity {
             }
         });
 
+        // O item do carrinho usa actionLayout, entao nao passa por
+        // onOptionsItemSelected e precisa do proprio listener.
+        cartActionView = menu.findItem(R.id.menu_cart).getActionView();
+        cartActionView.setOnClickListener(view -> openCart());
+        updateCartBadge();
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -108,6 +126,42 @@ public class LowestPriceProduct extends AppCompatActivity {
 //        }
 
         return false;
+    }
+
+    private void updateCartBadge() {
+        if (cartActionView == null) {
+            return;
+        }
+
+        TextView badge = cartActionView.findViewById(R.id.cart_badge);
+        int units = CartRepository.countUnits(this);
+
+        badge.setText(units > 99 ? "99+" : String.valueOf(units));
+        badge.setVisibility(units > 0 ? View.VISIBLE : View.GONE);
+    }
+
+    public void openCart() {
+        clearSearchFocus();
+        startActivity(new Intent(this, CartActivity.class));
+    }
+
+    public void addToCart(int position) {
+        clearSearchFocus();
+        Item item = mAdapter.getItemByPosition(position);
+        CartRepository.add(this, item);
+        onCartChanged(getString(R.string.cart_added_one, item.getDescription()));
+    }
+
+    /**
+     * Ponto unico de atualizacao apos mexer no carrinho: avisa e refaz o contador.
+     */
+    public void onCartChanged(String message) {
+        updateCartBadge();
+        toast(message);
+    }
+
+    public void toast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     public void searchItems() {

@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingHorizontal="@dimen/space_margin_x"
+        android:paddingHorizontal="@dimen/space_screen_x"
         android:paddingTop="@dimen/space_gutter"
         android:paddingBottom="@dimen/space_margin_x"
         android:scrollbars="none" />

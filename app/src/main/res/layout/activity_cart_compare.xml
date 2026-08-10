@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O container raiz absorve os insets; o RecyclerView so cuida do proprio espacamento -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:fitsSystemWindows="true"
+    tools:context=".activity.cart.CartCompareActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Janela de validade dos precos -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_screen_x"
+            android:layout_marginTop="@dimen/space_gutter"
+            android:text="@string/cart_price_window"
+            android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps.Primary" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_base"
+            android:clipToPadding="false"
+            android:paddingHorizontal="@dimen/space_screen_x"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/compare_window_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:chipSpacingHorizontal="@dimen/space_base"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true" />
+
+        </HorizontalScrollView>
+
+        <!-- Produtos sem preco em nenhum estabelecimento da janela -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/compare_unavailable_card"
+            style="@style/Widget.GeruPreco.Card.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/space_screen_x"
+            android:layout_marginTop="@dimen/space_stack_gap"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="@dimen/space_stack_gap">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_marginEnd="@dimen/space_base"
+                    android:layout_marginTop="2dp"
+                    android:contentDescription="@string/cart_coverage"
+                    android:src="@drawable/ic_error_outline_24"
+                    app:tint="@color/error" />
+
+                <TextView
+                    android:id="@+id/compare_unavailable_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/compare_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingHorizontal="@dimen/space_screen_x"
+            android:paddingTop="@dimen/space_stack_gap"
+            android:paddingBottom="@dimen/space_margin_x"
+            android:scrollbars="none" />
+
+    </LinearLayout>
+
+    <!-- Nenhum estabelecimento com os produtos do carrinho -->
+    <TextView
+        android:id="@+id/compare_empty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:paddingHorizontal="@dimen/space_margin_x"
+        android:text="@string/cart_compare_empty"
+        android:textAppearance="@style/TextAppearance.GeruPreco.BodySm"
+        android:visibility="gone" />
+
+</FrameLayout>

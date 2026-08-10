@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O container raiz absorve os insets; o RecyclerView so cuida do proprio espacamento -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:fitsSystemWindows="true"
+    tools:context=".activity.cart.CartActivity">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/cart_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingHorizontal="@dimen/space_screen_x"
+        android:paddingTop="@dimen/space_gutter"
+        android:paddingBottom="96dp"
+        android:scrollbars="none" />
+
+    <!-- Estado vazio -->
+    <LinearLayout
+        android:id="@+id/cart_empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/space_margin_x"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:alpha="0.35"
+            android:contentDescription="@string/cart"
+            android:src="@drawable/ic_shopping_cart_24"
+            android:tint="@color/on_surface_variant" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_gutter"
+            android:text="@string/cart_empty"
+            android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_base"
+            android:gravity="center"
+            android:text="@string/cart_empty_hint"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+    </LinearLayout>
+
+    <!-- Barra fixa com o resumo e a acao de comparar -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cart_bottom_bar"
+        style="@style/Widget.GeruPreco.Card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="@dimen/space_screen_x">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="@dimen/space_gutter">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/cart_summary_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+                <TextView
+                    android:id="@+id/cart_summary_units"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps" />
+
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cart_compare"
+                style="@style/Widget.GeruPreco.Button.Filled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_stack_gap"
+                android:text="@string/cart_compare" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>

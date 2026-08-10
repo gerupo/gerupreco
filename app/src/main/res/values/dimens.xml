@@ -8,6 +8,10 @@
     <dimen name="space_container_padding">20dp</dimen>
     <dimen name="space_margin_x">24dp</dimen>
 
+    <!-- Borda lateral das telas de conteudo: enxuta porque os cards ja tem
+         padding proprio, e a soma das duas e que define a moldura percebida -->
+    <dimen name="space_screen_x">6dp</dimen>
+
     <!-- Corner radii -->
     <dimen name="radius_sm">4dp</dimen>
     <dimen name="radius_default">8dp</dimen>

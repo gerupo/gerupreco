@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Uma linha do detalhamento de um orcamento -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingVertical="5dp">
+
+    <TextView
+        android:id="@+id/line_quantity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/space_base"
+        android:minWidth="28dp"
+        android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps" />
+
+    <TextView
+        android:id="@+id/line_description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.GeruPreco.BodySm"
+        android:textColor="@color/on_surface" />
+
+    <TextView
+        android:id="@+id/line_subtotal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_base"
+        android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps"
+        android:textColor="@color/on_surface" />
+
+</LinearLayout>

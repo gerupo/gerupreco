@@ -114,6 +114,13 @@ public class ItemAdapter extends RecyclerView.Adapter {
     }
 
     /**
+     * Catalogo inteiro, ignorando o filtro da busca.
+     */
+    public List<Item> getAllItems() {
+        return new ArrayList<>(allItemList);
+    }
+
+    /**
      * Todas as tags ja usadas, para sugerir no cadastro.
      */
     public List<String> getAllTags() {
@@ -177,6 +184,12 @@ public class ItemAdapter extends RecyclerView.Adapter {
 
         private void configureMenuActions(ContextMenu menu) {
             int position = getAdapterPosition();
+
+            MenuItem addToCart = (MenuItem) menu.findItem(R.id.action_add_to_cart);
+            addToCart.setOnMenuItemClickListener(menuItem -> {
+                mActivity.addToCart(position);
+                return true;
+            });
 
             MenuItem delete = (MenuItem) menu.findItem(R.id.action_delete);
             delete.setOnMenuItemClickListener(menuItem -> {

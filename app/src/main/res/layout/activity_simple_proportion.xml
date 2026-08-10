@@ -16,8 +16,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="@dimen/space_margin_x"
-            android:paddingTop="@dimen/space_margin_x"
+            android:paddingHorizontal="@dimen/space_screen_x"
+            android:paddingTop="@dimen/space_gutter"
             android:paddingBottom="96dp">
 
             <!-- Base proportion -->
@@ -31,7 +31,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="@dimen/space_container_padding">
+                    android:padding="@dimen/space_gutter">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -103,7 +103,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/space_margin_x"
+        android:layout_margin="@dimen/space_gutter"
         android:contentDescription="@string/add_row"
         app:srcCompat="@drawable/ic_add_24" />
 

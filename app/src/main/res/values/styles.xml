@@ -88,6 +88,21 @@
         <item name="rippleColor">@color/primary_container</item>
     </style>
 
+    <!-- Acao primaria solida: mesmo mint do FAB, sem sombra -->
+    <style name="Widget.GeruPreco.Button.Filled" parent="Widget.Material3.Button">
+        <item name="android:fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="backgroundTint">@color/primary_container</item>
+        <item name="android:textColor">@color/on_primary_container</item>
+        <item name="iconTint">@color/on_primary_container</item>
+        <item name="rippleColor">@color/on_primary_container</item>
+        <item name="elevation">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.GeruPreco.Small</item>
+    </style>
+
     <!-- Level 2 elevation: mint FAB with a mint bloom instead of a grey shadow -->
     <style name="Widget.GeruPreco.Fab" parent="Widget.Material3.FloatingActionButton.Primary">
         <item name="backgroundTint">@color/primary_container</item>

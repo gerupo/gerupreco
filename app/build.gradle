@@ -3,12 +3,25 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
-def appVersionCode = 12
+def appVersionCode = 13
 
 android {
     namespace = 'com.vacari.gerupreco'
 
     compileSdk = 37
+
+    // A chave e a senha estao versionadas no repositorio (key.jks e
+    // readmeKey.txt). Isso permite gerar a release assinada pela linha de
+    // comando, mas significa que qualquer pessoa com acesso ao repo assina
+    // builds como se fossem oficiais - ver a secao Seguranca no CLAUDE.md.
+    signingConfigs {
+        release {
+            storeFile = file('../key.jks')
+            storePassword = 'facada123'
+            keyAlias = 'gerupreco'
+            keyPassword = 'facada123'
+        }
+    }
 
     defaultConfig {
         applicationId = "com.vacari.gerupreco"
@@ -27,6 +40,7 @@ android {
             minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             versionNameSuffix = "-R"
+            signingConfig = signingConfigs.release
         }
         debug {
             versionNameSuffix = "-T"

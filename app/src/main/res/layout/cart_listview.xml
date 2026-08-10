@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.GeruPreco.Card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/space_stack_gap">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/space_gutter">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/cart_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/product"
+                android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+            <TextView
+                android:id="@+id/cart_size"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps" />
+
+        </LinearLayout>
+
+        <!-- Seletor de quantidade -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_base"
+            android:background="@drawable/bg_stepper"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/cart_decrease"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/cart_decrease"
+                android:padding="@dimen/space_base"
+                android:src="@drawable/ic_remove_24"
+                app:tint="@color/on_surface_variant" />
+
+            <TextView
+                android:id="@+id/cart_quantity"
+                android:layout_width="28dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.GeruPreco.PriceDisplay"
+                android:textSize="16sp" />
+
+            <ImageButton
+                android:id="@+id/cart_increase"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/cart_increase"
+                android:padding="@dimen/space_base"
+                android:src="@drawable/ic_add_24"
+                app:tint="@color/on_surface_variant" />
+
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/cart_remove"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/remove"
+            android:padding="@dimen/space_base"
+            android:src="@drawable/ic_delete_24"
+            app:tint="@color/on_surface_variant" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

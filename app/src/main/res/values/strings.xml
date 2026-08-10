@@ -62,4 +62,30 @@
     <string name="add_row">Adicionar Linha</string>
     <string name="remove">Remover</string>
 
+    <!-- Carrinho -->
+    <string name="cart">Carrinho</string>
+    <string name="cart_add">Adicionar ao carrinho</string>
+    <string name="cart_added_one">%1$s adicionado ao carrinho</string>
+    <string name="cart_add_by_tag">Adicionar por tag</string>
+    <string name="cart_no_tags">Nenhum produto tem tag cadastrada.</string>
+    <string name="cart_empty">Carrinho vazio</string>
+    <string name="cart_empty_hint">Segure um produto na lista para adicionar, ou use \"Adicionar por tag\" no menu.</string>
+    <string name="cart_clear">Limpar carrinho</string>
+    <string name="cart_clear_confirm">Deseja remover todos os produtos do carrinho?</string>
+    <string name="cart_compare">Comparar</string>
+    <string name="cart_compare_title">Melhores mercados</string>
+    <string name="cart_compare_empty">Nenhum estabelecimento tem os produtos do carrinho nesta janela de datas.</string>
+    <string name="cart_increase">Aumentar quantidade</string>
+    <string name="cart_decrease">Diminuir quantidade</string>
+    <string name="cart_searching">Consultando %1$d de %2$d produtos...</string>
+    <string name="cart_price_window">Preços de até</string>
+    <string name="cart_window_any">Qualquer data</string>
+    <string name="cart_coverage">Cobertura</string>
+    <string name="cart_show_details">Ver detalhamento</string>
+    <string name="cart_hide_details">Ocultar detalhamento</string>
+    <string name="cart_quantity_short">%1$dx</string>
+    <string name="cart_missing_more">%1$s e mais %2$d</string>
+    <string name="cart_missing_price">não tem</string>
+    <string name="cart_oldest_price">Preço mais antigo: %1$s</string>
+
 </resources>

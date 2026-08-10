@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <plurals name="cart_products">
+        <item quantity="one">%1$d produto</item>
+        <item quantity="other">%1$d produtos</item>
+    </plurals>
+
+    <plurals name="cart_units">
+        <item quantity="one">%1$d unidade no total</item>
+        <item quantity="other">%1$d unidades no total</item>
+    </plurals>
+
+    <plurals name="cart_added">
+        <item quantity="one">%1$d produto adicionado ao carrinho</item>
+        <item quantity="other">%1$d produtos adicionados ao carrinho</item>
+    </plurals>
+
+    <plurals name="cart_complete">
+        <item quantity="one">Tem o produto do carrinho</item>
+        <item quantity="other">Tem os %1$d produtos do carrinho</item>
+    </plurals>
+
+    <plurals name="cart_missing">
+        <item quantity="one">Falta %1$d: %2$s</item>
+        <item quantity="other">Faltam %1$d: %2$s</item>
+    </plurals>
+
+    <plurals name="cart_unavailable">
+        <item quantity="one">%1$d produto sem preço em nenhum estabelecimento: %2$s</item>
+        <item quantity="other">%1$d produtos sem preço em nenhum estabelecimento: %2$s</item>
+    </plurals>
+
+    <plurals name="cart_window_days">
+        <item quantity="one">%1$d dia</item>
+        <item quantity="other">%1$d dias</item>
+    </plurals>
+
+</resources>

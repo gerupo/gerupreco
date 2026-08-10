@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.GeruPreco.Card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/space_stack_gap"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/space_gutter">
+
+        <!-- Posicao no ranking + estabelecimento -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/quote_rank"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_rank"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps"
+                android:textColor="@color/on_surface" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_stack_gap"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/quote_company"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/establishment"
+                    android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+                <TextView
+                    android:id="@+id/quote_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/address"
+                    android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Total do carrinho neste estabelecimento -->
+        <TextView
+            android:id="@+id/quote_total"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_stack_gap"
+            android:text="@string/price_placeholder"
+            android:textAppearance="@style/TextAppearance.GeruPreco.PriceDisplay.Large" />
+
+        <!-- Cobertura: completo ou o que falta -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_base"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/quote_coverage_icon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="6dp"
+                android:layout_marginTop="2dp"
+                android:contentDescription="@string/cart_coverage"
+                android:src="@drawable/ic_check_circle_24" />
+
+            <TextView
+                android:id="@+id/quote_coverage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+        </LinearLayout>
+
+        <!-- Detalhamento item a item, aberto ao tocar no card -->
+        <LinearLayout
+            android:id="@+id/quote_breakdown"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_stack_gap"
+            android:orientation="vertical"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/quote_toggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_stack_gap"
+            android:text="@string/cart_show_details"
+            android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps"
+            android:textColor="@color/secondary" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

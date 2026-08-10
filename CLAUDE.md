@@ -19,7 +19,7 @@ O wrapper do Gradle é usado para tudo. **O JDK importa**: o projeto compila com
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 
 .\gradlew.bat assembleDebug          # APK debug -> app/build/outputs/apk/debug/app-v<versionCode>-debug.apk
-.\gradlew.bat assembleRelease        # gera APK NÃO assinado (não há signingConfig no build.gradle)
+.\gradlew.bat assembleRelease        # APK assinado com key.jks -> app/build/outputs/apk/release/app-v<versionCode>-release.apk
 .\gradlew.bat testDebugUnitTest      # testes JVM
 .\gradlew.bat testDebugUnitTest --tests "com.vacari.gerupreco.util.StringUtilTest"   # um teste só
 ```
@@ -45,12 +45,36 @@ Pacotes sob `com.vacari.gerupreco`, organizados por tipo (`activity`, `adapter`,
 1. **Firestore** (`ItemRepository`, coleção `item`) — catálogo de produtos do usuário. É a fonte de verdade do cadastro.
 2. **Nota Paraná** via Retrofit (`RetrofitRequest`) — preços por código de barras. Somente leitura, externa.
 
-Há ainda SQLite/ORMLite (`DatabaseHelper`, `NotificationRepository`) para notificações de preço-alvo, mas **essa funcionalidade está desativada**: a entrada de menu e o item de contexto que levam à `NotificationActivity` estão comentados, então a tela é inalcançável pela UI.
+3. **SQLite/ORMLite** (`DatabaseHelper`) — carrinho de compras (`CartRepository`, tabela `cart_item`). Local, sem sincronização.
+
+Há ainda `NotificationRepository` para notificações de preço-alvo, mas **essa funcionalidade está desativada**: a entrada de menu e o item de contexto que levam à `NotificationActivity` estão comentados, então a tela é inalcançável pela UI.
 
 ### Fluxo das telas
 
 `MainActivity` → `LowestPriceProduct` (lista de produtos) → `LowestPriceActivity` (preços de um produto).
 `MainActivity` → `SimpleProportionActivity` (regra de três).
+`LowestPriceProduct` → `CartActivity` (carrinho) → `CartCompareActivity` (ranking de mercados).
+
+## Carrinho de compras
+
+Produtos entram por long press na lista (`Adicionar ao carrinho`) ou em lote pelo `AddByTagDialog` (`Adicionar por tag`, no menu da própria `CartActivity` — o catálogo vem do Firestore, então o diálogo só abre depois da consulta). O ícone na action bar da lista traz um badge com o total de **unidades**, não de linhas.
+
+O `CartItem` guarda cópia de descrição/tamanho/unidade em vez de referenciar o `Item` do Firestore: a tela monta sem rede, e excluir o produto do catálogo não deixa linha órfã. Adicionar um produto já presente **incrementa a quantidade** em vez de duplicar a linha.
+
+### Comparação de mercados
+
+`CartCompare` é lógica pura e testada (`CartCompareTest`). Regras que valem preservar:
+
+- **Agrupa por `estabelecimento.codigo`, nunca por nome.** Há três lojas distintas chamadas "MUFFATAO"; agrupar por nome fundiria filiais.
+- **Uma chamada de API por produto.** Testei lista separada por vírgula, parâmetro repetido e `gtin[]` — nenhuma funciona. `CartPriceLoader` dispara em paralelo e junta as respostas; falha de rede num produto vira "sem preço" e não derruba o resto.
+- **O filtro de data é local, não é o parâmetro `data` da API.** Aquele parâmetro é inconsistente (`data=7` devolve mais registros que `data=3`). A busca pede tudo com `data=-1` e a janela é recortada em memória — por isso trocar o chip reordena na hora, sem tráfego novo.
+- **Ordenação:** completos primeiro pelo menor total; depois os incompletos, primeiro os que menos deixam faltar, e só então pelo total parcial. Um total baixo não vale nada se veio de um mercado que tem metade da lista.
+- **Produto sem preço em lugar nenhum sai do cálculo de faltantes** e aparece num aviso à parte. Se contasse, jogaria todos os mercados para o grupo dos incompletos sem diferenciar ninguém.
+- **A mesma loja pode aparecer duas vezes** na resposta quando o GTIN está cadastrado com e sem zero à esquerda; vale o menor preço.
+
+### Preço vem como texto com ponto decimal
+
+`PriceUtil.parse` trata `"4.50"` como 4,50. Aplicar a regra pt-BR (ponto = milhar) transformava `3.11` em `311` e os totais saíam cem vezes maiores — o bug passou por revisão de código e só apareceu no aparelho. A vírgula só é considerada separador decimal quando de fato aparece na string.
 
 ### Gate de versão — não é bug
 
@@ -116,6 +140,9 @@ Todas custaram um ciclo de depuração; vale não repetir.
 - **`Spinner` precisa de largura folgada.** O padding da seta consome ~55dp; com pouco espaço, unidades de duas letras (`ML`, `KG`) simplesmente deixam de ser desenhadas enquanto as de uma letra (`G`, `L`) aparecem. Atenção especial ao trocar `layout_width="match_parent"`+peso por `0dp`+peso — a distribuição de largura resultante é bem diferente.
 - **`SearchView` reexibe o teclado ao reassumir o foco.** Ao fechar um diálogo ou voltar de outra tela, o teclado volta sozinho. `LowestPriceProduct.clearSearchFocus()` é chamado antes de cada sobreposição; manter esse cuidado ao adicionar novas ações na lista.
 - **`NotificationAdapter` faz cast de `<Switch>` para `android.widget.Switch`**, mas o AppCompat infla a tag como `SwitchCompat`. Isso estouraria em runtime — está latente só porque a tela é inalcançável.
+- **A action bar da lista comporta 3 ações.** Um item com `showAsAction="never"` cria o botão de overflow e **empurra o scanner de código de barras para dentro dele**. Foi o que aconteceu ao pôr "Adicionar por tag" ali; por isso essa ação mora na `CartActivity`.
+- **Item de menu com `actionLayout` não passa por `onOptionsItemSelected`.** O ícone do carrinho precisa de `setOnClickListener` na própria action view.
+- **`Chip` com cor de fundo fixa não mostra seleção.** `setChipBackgroundColorResource` aplica a mesma cor a todos os estados; é preciso um `ColorStateList` com `state_checked` (ver `res/color/chip_window_background.xml`).
 
 ## Verificação em dispositivo
 
@@ -138,6 +165,12 @@ Notas que economizam tempo:
 - Um elemento pode existir na hierarquia com o texto certo e mesmo assim **não ser desenhado**. Quando a suspeita for essa, ler os pixels da região (`System.Drawing.Bitmap.GetPixel`) distingue "não renderizado" de "renderizado sem contraste".
 - Long press: `input swipe <x> <y> <x> <y> 900`.
 
+## Publicar uma versão
+
+Passo a passo completo em **[RELEASE.md](RELEASE.md)**. O resumo: subir `appVersionCode` no `app/build.gradle`, `assembleRelease`, copiar o APK para `app/release/`, commitar, **empurrar**, e só então apontar o documento `appVersion` do Firestore para o novo `versionCode` e URL.
+
+A ordem importa: o Firestore é o gatilho de produção. Mudá-lo antes do APK estar acessível no GitHub deixa o app inutilizável, porque o gate de versão bloqueia a home e o download falha.
+
 ## Segurança
 
-`key.jks` e `readmeKey.txt` (que contém a senha do keystore em texto plano) estão no repositório e **não** constam do `.gitignore`. Qualquer pessoa com acesso ao repo pode assinar builds como se fossem oficiais. Vale rotacionar a chave e removê-los do versionamento.
+`key.jks` e `readmeKey.txt` (que contém a senha do keystore em texto plano) estão no repositório e **não** constam do `.gitignore` — e a senha também está no `signingConfigs` do `app/build.gradle`. Qualquer pessoa com acesso ao repo pode assinar builds como se fossem oficiais e, como o app instala APK de uma URL pública sem verificação extra, isso distribui código direto para os aparelhos. Vale rotacionar a chave, removê-los do versionamento e manter o repositório privado.
