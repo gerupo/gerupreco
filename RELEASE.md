@@ -152,7 +152,14 @@ Detalhes de como dirigir o app por adb estão no `CLAUDE.md`.
 
 O push é **obrigatório** antes do Firestore: a URL aponta para `refs/heads/main` no GitHub.
 
-O push pode falhar com `could not read Username for 'https://github.com'` num terminal não interativo: o token do GitHub Desktop não fica acessível ao git de linha de comando. Nesse caso, empurre pela interface do GitHub Desktop e **só depois** siga para o passo 9.
+As credenciais já estão configuradas: `credential.helper=manager` com `credential.credentialStore=wincredman`, e o token fica no Cofre do Windows como `git:https://github.com`. O push funciona sem prompt, inclusive num terminal não interativo.
+
+Se um dia voltar a pedir autenticação, ela **precisa** de uma janela interativa — o navegador tem de abrir. Duas armadilhas ao tentar isso a partir de um agente:
+
+- A janela nova herda o ambiente de quem a criou. Se `GCM_INTERACTIVE=never` estiver setado, o GCM não abre o navegador e cai no prompt de senha, que o GitHub **rejeita** (`Password authentication is not supported`). Force `GCM_INTERACTIVE=auto` e `GCM_GITHUB_AUTHMODES=browser`.
+- O `PATH` herdado pode ser anterior à instalação do Git; aí o GCM falha com `Failed to locate 'git.exe' executable on the path`.
+
+A entrada `LegacyGeneric:target=GitHub - https://api.github.com/...` no Cofre é do GitHub Desktop e **não** serve para o git de linha de comando.
 
 ### 9. Confirmar que a URL responde
 
