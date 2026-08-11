@@ -13,17 +13,17 @@
     <string name="changelog_dismiss">Entendi</string>
 
     <string-array name="changelog_titles">
-        <item>Preço por quilo e por litro</item>
-        <item>A lata barata que sai cara</item>
-        <item>Cadastro sem tamanho fica avisado</item>
-        <item>A janela de datas vale para as duas telas</item>
+        <item>As duas comparações agora são abas</item>
+        <item>Mercados: onde o carrinho sai mais barato</item>
+        <item>Produtos: qual rende mais por quilo ou litro</item>
+        <item>Uma busca só, e a janela de datas vale para as duas</item>
     </string-array>
 
     <string-array name="changelog_descriptions">
-        <item>O carrinho ganhou o botão da cédula, no topo. Ele busca o preço de cada produto e mostra quanto custa o quilo ou o litro de cada um, do mais barato ao mais caro.</item>
-        <item>É a comparação que o preço da etiqueta esconde: a lata de 350 ml por R$ 3,50 sai a R$ 10,00 o litro, enquanto a garrafa de 1 litro por R$ 8,00 sai por R$ 8,00.</item>
-        <item>Produto sem tamanho ou unidade cadastrados não tem como entrar na conta. Em vez de sumir da lista, ele aparece num aviso dizendo qual editar.</item>
-        <item>Escolher "últimos 7 dias" numa tela passa a valer na outra também, para os números das duas contarem sempre a mesma história.</item>
+        <item>O botão da cédula saiu do topo do carrinho. Agora existe um único botão "Comparar", e as duas comparações viraram abas lado a lado — dá para deslizar de uma para a outra.</item>
+        <item>A primeira aba soma o carrinho inteiro em cada mercado e ordena do mais barato, avisando quando falta algum produto na loja.</item>
+        <item>A segunda aba compara os produtos entre si: quanto custa o quilo ou o litro de cada um. É o que o preço da etiqueta esconde — a lata de 350 ml por R$ 3,50 sai a R$ 10,00 o litro, e a garrafa de 1 litro por R$ 8,00 sai por R$ 8,00.</item>
+        <item>Os preços são buscados uma vez só para as duas abas, então trocar de aba é instantâneo. Escolher "últimos 7 dias" reordena as duas na hora.</item>
     </string-array>
 
 </resources>

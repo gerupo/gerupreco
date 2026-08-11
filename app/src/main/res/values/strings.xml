@@ -73,8 +73,14 @@
     <string name="cart_clear">Limpar carrinho</string>
     <string name="cart_clear_confirm">Deseja remover todos os produtos do carrinho?</string>
     <string name="cart_compare">Comparar</string>
-    <string name="cart_compare_title">Melhores mercados</string>
+    <string name="cart_compare_title">Comparar carrinho</string>
     <string name="cart_compare_empty">Nenhum estabelecimento tem os produtos do carrinho nesta janela de datas.</string>
+    <!-- As abas sao nomeadas pelo que cada uma ranqueia: e a unica diferenca
+         entre elas, e a legenda logo abaixo completa a frase. -->
+    <string name="cart_tab_markets">Mercados</string>
+    <string name="cart_tab_products">Produtos</string>
+    <string name="cart_tab_markets_caption">Onde o carrinho inteiro sai mais barato</string>
+    <string name="cart_tab_products_caption">Qual produto rende mais por quilo ou litro</string>
     <string name="cart_increase">Aumentar quantidade</string>
     <string name="cart_decrease">Diminuir quantidade</string>
     <string name="cart_searching">Consultando %1$d de %2$d produtos...</string>
@@ -87,8 +93,6 @@
     <string name="cart_missing_more">%1$s e mais %2$d</string>
     <string name="cart_missing_price">não tem</string>
     <string name="cart_oldest_price">Preço mais antigo: %1$s</string>
-    <string name="cart_unit_price">Custo-benefício</string>
-    <string name="cart_unit_price_title">Preço por kg e litro</string>
     <string name="cart_unit_price_empty">Nenhum produto do carrinho tem preço nesta janela de datas e tamanho cadastrado para comparar.</string>
     <string name="cart_unit_price_value">%1$s / %2$s</string>
     <string name="cart_unit_price_at">%1$s em %2$s</string>

@@ -13,12 +13,10 @@ A interface é toda em **português**. Comentários e nomes de código também s
 
 ## Comandos
 
-O wrapper do Gradle é usado para tudo. **O JDK importa**: o projeto compila com `sourceCompatibility`/`targetCompatibility` **25**. O JDK 25 fica em `C:\Program Files\Java\jdk-25.0.4` (Oracle), e é para ele que `JAVA_HOME` aponta. O JBR que acompanha o Android Studio **não** serve — está no 17.
+O wrapper do Gradle é usado para tudo. **O JDK importa**: o projeto compila com `sourceCompatibility`/`targetCompatibility` **25**. O JBR que acompanha o Android Studio serve — está no 25.0.2. O JDK Oracle que antes ficava em `C:\Program Files\Java\jdk-25.0.4` **não está mais instalado**, e `JAVA_HOME` não está definido em nenhum escopo do ambiente: a variável precisa ser exportada na sessão antes de chamar o wrapper.
 
 ```powershell
-# JAVA_HOME ja esta no ambiente do usuario; a linha abaixo so e necessaria
-# em shells herdados de um processo aberto antes da instalacao do JDK 25.
-$env:JAVA_HOME = "C:\Program Files\Java\jdk-25.0.4" ou "C:\Program Files\Android\Android Studio\jbr"
+$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 
 .\gradlew.bat assembleDebug          # APK debug -> app/build/outputs/apk/debug/app-v<versionCode>-debug.apk
 .\gradlew.bat assembleRelease        # APK assinado com key.jks -> app/build/outputs/apk/release/app-v<versionCode>-release.apk
@@ -57,7 +55,7 @@ Há ainda `NotificationRepository` para notificações de preço-alvo, mas **ess
 
 `MainActivity` → `LowestPriceProduct` (lista de produtos) → `LowestPriceActivity` (preços de um produto).
 `MainActivity` → `SimpleProportionActivity` (regra de três).
-`LowestPriceProduct` → `CartActivity` (carrinho) → `CartCompareActivity` (ranking de mercados) e `CartUnitPriceActivity` (ranking de custo-benefício).
+`LowestPriceProduct` → `CartActivity` (carrinho) → `CartCompareActivity` (comparador, duas abas).
 
 ## Carrinho de compras
 
@@ -65,7 +63,26 @@ Produtos entram por long press na lista (`Adicionar ao carrinho`) ou em lote pel
 
 O `CartItem` guarda cópia de descrição/tamanho/unidade em vez de referenciar o `Item` do Firestore: a tela monta sem rede, e excluir o produto do catálogo não deixa linha órfã. Adicionar um produto já presente **incrementa a quantidade** em vez de duplicar a linha.
 
-### Comparação de mercados
+### O comparador e suas duas abas
+
+O botão **Comparar** do rodapé é a única entrada. Ele abre a `CartCompareActivity`, que hospeda duas abas num `ViewPager2` sobre o mesmo carrinho e os mesmos preços:
+
+| Aba | Ranqueia | Legenda | Lógica |
+| --- | --- | --- | --- |
+| **Mercados** | estabelecimentos | "Onde o carrinho inteiro sai mais barato" | `CartCompare` / `MarketQuoteFragment` |
+| **Produtos** | itens entre si | "Qual produto rende mais por quilo ou litro" | `CartUnitPrice` / `UnitPriceFragment` |
+
+Antes eram duas telas — a segunda escondida atrás de um ícone mudo na action bar do carrinho — e se confundiam: os dois nomes ("Comparar", "Custo-benefício") descreviam igualmente bem qualquer uma das duas. **As abas são nomeadas pelo substantivo do que cada uma ranqueia**, que é exatamente onde diferem; a legenda logo abaixo completa a frase e troca junto com a aba. Renomear as abas para algo genérico devolve a confusão.
+
+Consequências do desenho que valem preservar:
+
+- **A consulta é do host, não das abas.** `CartCompareActivity` chama o `CartPriceLoader` uma vez e guarda `cartItems`/`prices`; as abas só leem e ordenam. Como as duas consomem exatamente os mesmos GTINs, duas telas separadas faziam a mesma consulta duas vezes, com dois `ProgressDialog` seguidos. Não mover o carregamento para dentro de um fragment.
+- **As abas se registram no host** (`registerTab`/`unregisterTab` em `onAttach`/`onDetach`) e ele chama `render()` nas que estiverem vivas. É de propósito não usar `findFragmentByTag("f" + position)`: essa tag é detalhe interno do `FragmentStateAdapter`.
+- **`isLoaded()` segura o aviso de vazio.** Antes da consulta voltar o resultado está vazio por falta de dados, não por falta de oferta — sem a guarda, a aba pisca "nenhum estabelecimento tem os produtos".
+- **A raiz de cada fragment é um `FrameLayout` que não rola.** Quem tem `fitsSystemWindows` é a raiz da Activity; promover o `RecyclerView` a raiz do fragment reabre a armadilha de insets descrita mais abaixo.
+- **Fragments existem só aqui.** O resto do app é Activity pura com `findViewById`; `androidx.fragment` e `androidx.viewpager2` entraram no `build.gradle` por causa destas abas.
+
+#### Aba Mercados
 
 `CartCompare` é lógica pura e testada (`CartCompareTest`). Regras que valem preservar:
 
@@ -76,9 +93,9 @@ O `CartItem` guarda cópia de descrição/tamanho/unidade em vez de referenciar 
 - **Produto sem preço em lugar nenhum sai do cálculo de faltantes** e aparece num aviso à parte. Se contasse, jogaria todos os mercados para o grupo dos incompletos sem diferenciar ninguém.
 - **A mesma loja pode aparecer duas vezes** na resposta quando o GTIN está cadastrado com e sem zero à esquerda; vale o menor preço.
 
-### Custo-benefício — preço por quilo e por litro
+#### Aba Produtos — preço por quilo e por litro
 
-`CartUnitPrice` é lógica pura e testada (`CartUnitPriceTest`), aberta pelo ícone de cédula na action bar da `CartActivity`. Ranqueia os **produtos entre si**, não os mercados.
+`CartUnitPrice` é lógica pura e testada (`CartUnitPriceTest`). Ranqueia os **produtos entre si**, não os mercados.
 
 - **A API não devolve o tamanho da embalagem.** `Product` traz descrição, valores, data, distância, GTIN e estabelecimento — nada de gramas ou mililitros. A única fonte é o `size`/`unitMeasure` do próprio catálogo, copiado para o `CartItem`.
 - **Normalizar não muda nada dentro de um mesmo produto.** A busca é por GTIN, e todas as ofertas de um GTIN têm o mesmo tamanho — dividir pelo volume dá a mesma ordem que o preço bruto. O que a divisão revela é a comparação **entre produtos diferentes**: a lata de 350 ml contra a garrafa de 1 L.
@@ -87,9 +104,7 @@ O `CartItem` guarda cópia de descrição/tamanho/unidade em vez de referenciar 
 - **Peso e volume caem na mesma lista ordenada.** São grandezas diferentes e comparar R$/kg de arroz com R$/L de sabão não diz nada sozinho; a lista única foi pedida assim, e cada linha carrega o rótulo da unidade.
 - **Tamanho inválido sai como `unmeasured`, separado dos `unpriced`.** A ação é diferente: um se resolve no cadastro, o outro abrindo a janela de datas. Somar os dois mandaria o usuário procurar no lugar errado.
 - **`UnitMeasureUtil` repete a convenção do `PriceUtil`**: o ponto é decimal e só vira separador de milhar quando há vírgula na string. Sem isso `1.5 L` viraria 15 L. Como `size` é texto livre, a leitura também tolera `"500g"` e descarta o que não tiver número.
-- **`PriceWindow` centraliza os chips de janela de data** e a preferência, compartilhada com a `CartCompareActivity` — alternar entre as telas com janelas diferentes pareceria resultado inconsistente.
-
-O ícone é `ic_payments_24` (cédula), e **não** `ic_sell_24` (etiqueta de preço): ao lado do `ic_label_24` das tags, na mesma action bar, a etiqueta tem a mesma silhueta e as duas ações viram uma só.
+- **`PriceWindow` monta os chips de janela de data uma vez, na Activity**, acima do pager: a janela vale para as duas abas, e trocá-la redesenha ambas. A preferência em `SharedPreferences` sobrevive de dentro da época das duas telas separadas — hoje ela só serve para lembrar a escolha entre visitas.
 
 ### Preço vem como texto com ponto decimal
 
@@ -149,7 +164,7 @@ Tema escuro com primária mint e secundária roxa. Hierarquia vem de **camadas t
 | ---------------- | ------------------------------------------------------- |
 | `colors.xml`     | paleta completa (surfaces, primary, secondary, outline) |
 | `type.xml`       | `TextAppearance.GeruPreco.*`                            |
-| `styles.xml`     | cards, campos, FAB, action bar, diálogos, shapes        |
+| `styles.xml`     | cards, campos, FAB, action bar, abas, diálogos, shapes  |
 | `dimens.xml`     | escala de 8px (`space_*`) e raios (`radius_*`)          |
 | `tag_colors.xml` | paleta das tags                                         |
 

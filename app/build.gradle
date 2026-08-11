@@ -3,7 +3,7 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
-def appVersionCode = 14
+def appVersionCode = 15
 
 android {
     namespace = 'com.vacari.gerupreco'
@@ -70,6 +70,9 @@ dependencies {
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'androidx.activity:activity:1.13.0'
+    // Abas do comparador do carrinho (CartCompareActivity)
+    implementation 'androidx.fragment:fragment:1.8.9'
+    implementation 'androidx.viewpager2:viewpager2:1.1.0'
 
     // Firebase & Utilities
     implementation 'com.google.firebase:firebase-firestore:26.5.0'

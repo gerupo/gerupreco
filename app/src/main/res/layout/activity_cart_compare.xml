@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- O container raiz absorve os insets; o RecyclerView so cuida do proprio espacamento -->
+<!-- O container raiz absorve os insets; as abas so cuidam do proprio espacamento.
+
+     Tudo que vale para as duas leituras vive aqui: a janela de datas e o
+     progresso da consulta. Cada aba recebe o mesmo carrinho e os mesmos precos
+     e so muda o eixo do ranking. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -14,12 +18,28 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Janela de validade dos precos -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/compare_tabs"
+            style="@style/Widget.GeruPreco.Tabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- Completa o nome da aba: sozinhos, "Mercados" e "Produtos" dizem o
+             que e ranqueado, mas nao a pergunta que a aba responde -->
+        <TextView
+            android:id="@+id/compare_caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/space_screen_x"
+            android:layout_marginTop="@dimen/space_stack_gap"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+        <!-- Janela de validade dos precos, valida para as duas abas -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_screen_x"
-            android:layout_marginTop="@dimen/space_gutter"
+            android:layout_marginTop="@dimen/space_stack_gap"
             android:text="@string/cart_price_window"
             android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps.Primary" />
 
@@ -42,64 +62,13 @@
 
         </HorizontalScrollView>
 
-        <!-- Produtos sem preco em nenhum estabelecimento da janela -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/compare_unavailable_card"
-            style="@style/Widget.GeruPreco.Card.Row"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/space_screen_x"
-            android:layout_marginTop="@dimen/space_stack_gap"
-            android:visibility="gone">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="@dimen/space_stack_gap">
-
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginEnd="@dimen/space_base"
-                    android:layout_marginTop="2dp"
-                    android:contentDescription="@string/cart_coverage"
-                    android:src="@drawable/ic_error_outline_24"
-                    app:tint="@color/error" />
-
-                <TextView
-                    android:id="@+id/compare_unavailable_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/compare_recycler"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/compare_pager"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:paddingHorizontal="@dimen/space_screen_x"
-            android:paddingTop="@dimen/space_stack_gap"
-            android:paddingBottom="@dimen/space_margin_x"
-            android:scrollbars="none" />
+            android:layout_marginTop="@dimen/space_stack_gap"
+            android:layout_weight="1" />
 
     </LinearLayout>
-
-    <!-- Nenhum estabelecimento com os produtos do carrinho -->
-    <TextView
-        android:id="@+id/compare_empty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:paddingHorizontal="@dimen/space_margin_x"
-        android:text="@string/cart_compare_empty"
-        android:textAppearance="@style/TextAppearance.GeruPreco.BodySm"
-        android:visibility="gone" />
 
 </FrameLayout>

@@ -140,6 +140,21 @@
         <item name="actionMenuTextColor">@color/on_surface</item>
     </style>
 
+    <!-- Abas do comparador do carrinho. Encostam na action bar, entao repetem
+         o surface_container dela: uma cor so, sem costura no meio. -->
+    <style name="Widget.GeruPreco.Tabs" parent="Widget.Material3.TabLayout">
+        <item name="android:background">@color/surface_container</item>
+        <item name="tabIndicatorColor">@color/primary_container</item>
+        <item name="tabIndicatorHeight">3dp</item>
+        <item name="tabIndicatorFullWidth">false</item>
+        <item name="tabSelectedTextColor">@color/primary_container</item>
+        <item name="tabTextColor">@color/on_surface_variant</item>
+        <item name="tabTextAppearance">@style/TextAppearance.GeruPreco.LabelCaps</item>
+        <item name="tabRippleColor">@color/surface_container_high</item>
+        <item name="tabGravity">fill</item>
+        <item name="tabMode">fixed</item>
+    </style>
+
     <style name="Widget.GeruPreco.SearchView" parent="Widget.AppCompat.SearchView">
         <item name="queryBackground">@android:color/transparent</item>
         <item name="submitBackground">@android:color/transparent</item>

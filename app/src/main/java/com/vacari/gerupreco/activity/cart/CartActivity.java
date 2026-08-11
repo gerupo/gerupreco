@@ -95,20 +95,13 @@ public class CartActivity extends AppCompatActivity {
 
     /**
      * "Adicionar por tag" continua visivel com o carrinho vazio - e por ela que
-     * ele se enche. As outras duas nao teriam o que fazer.
+     * ele se enche. "Limpar carrinho" nao teria o que fazer.
      */
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        boolean hasItems = mAdapter.getItemCount() > 0;
-
         MenuItem clear = menu.findItem(R.id.menu_cart_clear);
         if (clear != null) {
-            clear.setVisible(hasItems);
-        }
-
-        MenuItem unitPrice = menu.findItem(R.id.menu_cart_unit_price);
-        if (unitPrice != null) {
-            unitPrice.setVisible(hasItems);
+            clear.setVisible(mAdapter.getItemCount() > 0);
         }
 
         return super.onPrepareOptionsMenu(menu);
@@ -123,11 +116,6 @@ public class CartActivity extends AppCompatActivity {
 
         if (item.getItemId() == R.id.menu_cart_add_by_tag) {
             openAddByTag();
-            return true;
-        }
-
-        if (item.getItemId() == R.id.menu_cart_unit_price) {
-            open(CartUnitPriceActivity.class);
             return true;
         }
 
