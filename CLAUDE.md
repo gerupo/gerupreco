@@ -13,20 +13,43 @@ A interface é toda em **português**. Comentários e nomes de código também s
 
 ## Comandos
 
-O wrapper do Gradle é usado para tudo. **O JDK importa**: o projeto compila com `sourceCompatibility`/`targetCompatibility` **25**. O JBR que acompanha o Android Studio serve — está no 25.0.2. O JDK Oracle que antes ficava em `C:\Program Files\Java\jdk-25.0.4` **não está mais instalado**, e `JAVA_HOME` não está definido em nenhum escopo do ambiente: a variável precisa ser exportada na sessão antes de chamar o wrapper.
+O wrapper do Gradle é usado para tudo. **O JDK importa**: o projeto compila com `sourceCompatibility`/`targetCompatibility` **25**, e qualquer JDK anterior falha com `error: invalid source release: 25`.
+
+### Ache o JDK 25 antes de compilar — não presuma o caminho
+
+**Este repositório é usado em mais de uma máquina, e elas não têm os mesmos JDKs.** Em algumas o JBR que acompanha o Android Studio já é 25; em outras esse mesmo JBR é 17 e quem tem o 25 é um JDK instalado à parte, em `C:\Program Files\Java`. Um caminho fixo que funcionou numa máquina falha na outra, e o erro (`invalid source release: 25`) parece problema do código.
+
+Por isso: **detecte o caminho a cada sessão**, mesmo que uma anterior tenha funcionado com um valor fixo, e mesmo que este arquivo cite um caminho específico. `JAVA_HOME` não fica definido no ambiente do usuário — precisa ser exportado na sessão antes de chamar o wrapper.
 
 ```powershell
-$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+# Procura um JDK 25 entre o JBR do Android Studio e o que houver em C:\Program Files\Java.
+$candidatos = @("C:\Program Files\Android\Android Studio\jbr") +
+              (Get-ChildItem "C:\Program Files\Java" -Directory -ErrorAction SilentlyContinue).FullName
 
+$env:JAVA_HOME = $candidatos |
+    Where-Object { (Get-Content "$_\release" -ErrorAction SilentlyContinue) -match 'JAVA_VERSION="25' } |
+    Select-Object -First 1
+
+if (-not $env:JAVA_HOME) { throw "Nenhum JDK 25 encontrado. Procurados: $($candidatos -join '; ')" }
+
+$env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+"JAVA_HOME = $env:JAVA_HOME"
+```
+
+A versão sai do arquivo `release` da própria instalação (`JAVA_VERSION="25.0.4"`), que todo JDK tem. É de propósito **não** usar `java -version`: no PowerShell 5.1 essa saída vai para stderr, e `2>&1` sobre executável nativo embrulha cada linha num `ErrorRecord` — o teste passa a falhar pelo motivo errado.
+
+`ANDROID_HOME` entra no mesmo bloco porque tem o mesmo problema: não há `local.properties` versionado, e sem ele o build falha com `SDK location not found`.
+
+No Android Studio o JDK é controlado por `.gradle/config.properties` (`java.home`), que **não** é versionado — cada máquina aponta para o seu, e é por isso que o IDE compila numa máquina onde a linha de comando falha.
+
+### Comandos do wrapper
+
+```powershell
 .\gradlew.bat assembleDebug          # APK debug -> app/build/outputs/apk/debug/app-v<versionCode>-debug.apk
 .\gradlew.bat assembleRelease        # APK assinado com key.jks -> app/build/outputs/apk/release/app-v<versionCode>-release.apk
 .\gradlew.bat testDebugUnitTest      # testes JVM
 .\gradlew.bat testDebugUnitTest --tests "com.vacari.gerupreco.util.StringUtilTest"   # um teste só
 ```
-
-Compilar com um JDK anterior falha com `error: invalid source release: 25`. No Android Studio isso é controlado por `.gradle/config.properties` (`java.home`), que **não** é versionado — cada máquina precisa apontar para um JDK 25.
-
-O SDK do Android também precisa estar localizável: não há `local.properties` versionado, então o build depende de `ANDROID_HOME` (`$env:LOCALAPPDATA\Android\Sdk`), senão falha com `SDK location not found`.
 
 Não há lint configurado além do padrão do AGP, nem testes instrumentados reais (`ExampleInstrumentedTest` é o esqueleto gerado).
 
