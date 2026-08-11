@@ -2,14 +2,31 @@
 
 Guia operacional para um agente de IA publicar uma nova versão. O app **não está em nenhuma loja**: ele se atualiza sozinho baixando o APK assinado direto do GitHub, e o Firestore é quem diz qual é a versão vigente.
 
+> **Não copie números de versão deste documento.** Os comandos usam a variável `$v`, definida no passo 0 a partir do próprio repositório. Foi um `13` esquecido num exemplo que quase virou um downgrade em produção.
+
+## Resumo
+
+1. Descobrir a versão atual e definir `$v = atual + 1`
+2. Subir o `appVersionCode` no `app/build.gradle`
+3. Escrever as novidades em `changelog.xml`
+4. Rodar os testes
+5. Gerar o APK assinado
+6. Conferir que a assinatura é a mesma da versão anterior
+7. Copiar o APK para `app/release/`
+8. Testar o APK assinado no aparelho
+9. Commitar e **empurrar**
+10. Confirmar que a URL do GitHub serve o binário
+11. **Só então** apontar o Firestore para `$v` e a nova URL
+12. Validar
+
 ## Como a distribuição funciona
 
-`UpdateJob` escuta a coleção `appVersion` no Firestore. O documento tem dois campos:
+`UpdateJob` escuta a coleção `appVersion` no Firestore. O documento tem exatamente dois campos:
 
-| Campo | Exemplo |
-|---|---|
-| `versionCode` | `13` |
-| `url` | `https://github.com/gerupo/gerupreco/raw/refs/heads/main/app/release/app-v13-release.apk` |
+| Campo | Tipo | Conteúdo |
+|---|---|---|
+| `versionCode` | `integerValue` | o `appVersionCode` da última APK commitada |
+| `url` | `stringValue` | link raw do GitHub para essa APK em `app/release/` |
 
 Na abertura do app, `UpdateJob.checkVerisonCode()` compara o `versionCode` instalado com o do Firestore:
 
@@ -30,26 +47,42 @@ Se o `versionCode` subir no Firestore antes do APK estar acessível no GitHub, t
 # O projeto compila com Java 25, entao JAVA_HOME precisa apontar para um JDK 25.
 # Nesta maquina o unico e o JBR do Android Studio (OpenJDK 25.0.2).
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
-
-# git não está no PATH; vem embutido no GitHub Desktop
-$git = "C:\Users\vacar\AppData\Local\GitHubDesktop\app-3.6.3\resources\app\git\cmd\git.exe"
 ```
 
-Confirme a versão antes de confiar no caminho — `& "$env:JAVA_HOME\bin\java.exe" -version` tem de dizer 25. Com JDK anterior o build falha com `error: invalid source release: 25`. Confira também o número da versão do GitHub Desktop, que muda a cada atualização do app.
+Confirme antes de confiar no caminho — `& "$env:JAVA_HOME\bin\java.exe" -version` tem de dizer 25. Com JDK anterior o build falha com `error: invalid source release: 25`.
 
-> **Ao editar arquivos deste repositório por linha de comando, cuidado com acentuação.** No PowerShell 5.1, `Get-Content -Raw` lê em ANSI e `Set-Content -Encoding utf8` grava em UTF-8: a combinação corrompe todo texto acentuado. Prefira ferramentas de edição de arquivo a manipulação de string no shell.
+O git fica em `C:\Program Files\Git\cmd\git.exe` e está no PATH da máquina. Se o seu shell foi aberto antes da instalação, ele não enxerga; use o caminho completo ou `$env:PATH = "C:\Program Files\Git\cmd;$env:PATH"`.
+
+> **Cuidado com acentuação ao editar arquivos pelo shell.** No PowerShell 5.1, `Get-Content -Raw` lê em ANSI e `Set-Content -Encoding utf8` grava em UTF-8: a combinação corrompe todo texto acentuado. Use ferramentas de edição de arquivo, não manipulação de string no shell.
 
 ## Passo a passo
 
-### 1. Subir o versionCode
+### 0. Descobrir a versão atual e definir a nova
 
-Em `app/build.gradle`, incremente **uma** linha:
+```powershell
+$atual = [int](Select-String -Path "app\build.gradle" -Pattern 'def appVersionCode = (\d+)').Matches[0].Groups[1].Value
+$v     = $atual + 1
+$prev  = $atual
 
-```groovy
-def appVersionCode = 13   // era 12
+$key = (Get-Content "app\google-services.json" -Raw | ConvertFrom-Json).client[0].api_key[0].current_key
+$noFirestore = (Invoke-RestMethod "https://firestore.googleapis.com/v1/projects/gerupreco/databases/(default)/documents/appVersion?key=$key").documents[0].fields.versionCode.integerValue
+
+"codigo=$atual  firestore=$noFirestore  nova=$v"
 ```
 
-Ela alimenta `versionCode` e o `archivesName` (`app-v13`), então o nome do arquivo sai correto sozinho. O `versionName` (`3.1.1`) é cosmético e só muda se você quiser.
+`$atual` e `$noFirestore` devem ser **iguais** antes de começar. Se o Firestore estiver atrás, existe uma versão commitada que nunca foi publicada — descubra por quê antes de seguir, em vez de pular por cima.
+
+Mantenha `$v`, `$prev` e `$key` na mesma sessão de shell: todos os passos seguintes usam essas variáveis.
+
+### 1. Subir o versionCode
+
+Em `app/build.gradle`, incremente **uma** linha, para o valor de `$v`:
+
+```groovy
+def appVersionCode = 15   // era 14
+```
+
+Ela alimenta `versionCode` e o `archivesName` (`app-v15`), então o nome do arquivo sai correto sozinho. O `versionName` (`3.1.1`) é cosmético e só muda se você quiser.
 
 ### 2. Escrever as novidades da versão
 
@@ -69,7 +102,7 @@ Ao abrir o app pela primeira vez depois de atualizar, o usuário vê um diálogo
 
 Escreva do ponto de vista de quem usa ("Segure um produto para adicionar ao carrinho"), não do código ("adicionado CartRepository"). Bugs que nunca chegaram a ser publicados não são novidade para ninguém — não os liste.
 
-O controle é por `versionCode` em `SharedPreferences` (`ChangelogDialog`): o diálogo reaparece sozinho quando o `versionCode` instalado passa do valor guardado. Não há nada a resetar manualmente.
+O controle é por `versionCode` em `SharedPreferences` (`ChangelogDialog`). Não há nada a resetar manualmente.
 
 ### 3. Rodar os testes
 
@@ -77,15 +110,14 @@ O controle é por `versionCode` em `SharedPreferences` (`ChangelogDialog`): o di
 .\gradlew.bat testDebugUnitTest
 ```
 
-Não publique com teste vermelho. `CartCompareTest` cobre a lógica de ranking do carrinho, que é fácil de quebrar sem perceber.
+Não publique com teste vermelho. `CartCompareTest` e `CartUnitPriceTest` cobrem a lógica de ranking do carrinho, que é fácil de quebrar sem perceber.
 
 ### 4. Gerar o APK assinado
 
 ```powershell
 .\gradlew.bat clean assembleRelease
+Get-ChildItem "app\build\outputs\apk\release\app-v$v-release.apk"
 ```
-
-Sai em `app/build/outputs/apk/release/app-v13-release.apk`.
 
 A assinatura é automática: existe um `signingConfigs.release` em `app/build.gradle` apontando para `key.jks` na raiz (alias `gerupreco`, senha `facada123`, a mesma em `readmeKey.txt`).
 
@@ -97,11 +129,11 @@ A assinatura é automática: existe um `signingConfigs.release` em `app/build.gr
 $bt = (Get-ChildItem "$env:LOCALAPPDATA\Android\Sdk\build-tools" -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
 $apksigner = Join-Path $bt "apksigner.bat"
 
-& $apksigner verify --print-certs "app\build\outputs\apk\release\app-v13-release.apk"
-& $apksigner verify --print-certs "app\release\app-v12-release.apk"
+& $apksigner verify --print-certs "app\build\outputs\apk\release\app-v$v-release.apk"
+& $apksigner verify --print-certs "app\release\app-v$prev-release.apk"
 ```
 
-O `SHA-256 digest` das duas tem de ser **idêntico**. O esperado é:
+O `SHA-256 digest` das duas tem de ser **idêntico**, e igual a:
 
 ```
 7683eebd8b5c055296ed51be4d002639168f634362ba7b72729ab4c4215616e5
@@ -113,10 +145,10 @@ CN=Thiago Vacari, L=Cascavel, ST=Pr
 A URL do Firestore aponta para `app/release/`, que **é versionado no git** — não é a saída do Gradle.
 
 ```powershell
-Copy-Item "app\build\outputs\apk\release\app-v13-release.apk" "app\release\app-v13-release.apk" -Force
+Copy-Item "app\build\outputs\apk\release\app-v$v-release.apk" "app\release\app-v$v-release.apk" -Force
 Copy-Item "app\build\outputs\apk\release\output-metadata.json" "app\release\output-metadata.json" -Force
-Copy-Item "app\build\outputs\apk\release\baselineProfiles\0\app-v13-release.dm" "app\release\baselineProfiles\0\" -Force
-Copy-Item "app\build\outputs\apk\release\baselineProfiles\1\app-v13-release.dm" "app\release\baselineProfiles\1\" -Force
+Copy-Item "app\build\outputs\apk\release\baselineProfiles\0\app-v$v-release.dm" "app\release\baselineProfiles\0\" -Force
+Copy-Item "app\build\outputs\apk\release\baselineProfiles\1\app-v$v-release.dm" "app\release\baselineProfiles\1\" -Force
 ```
 
 Mantenha os APKs antigos: são o caminho de rollback.
@@ -129,12 +161,12 @@ Teste **a release**, não a debug — é ela que vai para o usuário. As duas t�
 
 ```powershell
 $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
-& $adb install -r "app\release\app-v13-release.apk"
+& $adb install -r "app\release\app-v$v-release.apk"
 & $adb shell dumpsys package com.vacari.gerupreco | Select-String "versionCode"
 & $adb shell monkey -p com.vacari.gerupreco -c android.intent.category.LAUNCHER 1
 ```
 
-Confirme que os cards da home respondem ao toque (o gate liberou), que o diálogo de novidades aparece, e exercite o fluxo que mudou. Feche o app com `am force-stop` e reabra: as novidades **não** podem reaparecer. Depois cheque se não houve crash:
+Confirme que os cards da home respondem ao toque (o gate liberou), que o diálogo de novidades aparece, e exercite o fluxo que mudou. Feche com `am force-stop` e reabra: as novidades **não** podem reaparecer. Depois cheque se não houve crash:
 
 ```powershell
 & $adb logcat -d -b crash | Select-String "gerupreco"
@@ -142,48 +174,52 @@ Confirme que os cards da home respondem ao toque (o gate liberou), que o diálog
 
 Detalhes de como dirigir o app por adb estão no `CLAUDE.md`.
 
-### 8. Commitar e **empurrar**
+### 8. Commitar e empurrar
 
 ```powershell
-& $git add -A
-& $git commit -m "mensagem descrevendo a versão"
-& $git push origin main
+git add -A
+git commit -m "mensagem descrevendo a versão"
+git push origin main
 ```
 
 O push é **obrigatório** antes do Firestore: a URL aponta para `refs/heads/main` no GitHub.
 
-As credenciais já estão configuradas: `credential.helper=manager` com `credential.credentialStore=wincredman`, e o token fica no Cofre do Windows como `git:https://github.com`. O push funciona sem prompt, inclusive num terminal não interativo.
+As credenciais já estão configuradas (`credential.helper=manager`, `credential.credentialStore=wincredman`, token no Cofre do Windows como `git:https://github.com`). O push funciona sem prompt, inclusive num terminal não interativo.
 
 Se um dia voltar a pedir autenticação, ela **precisa** de uma janela interativa — o navegador tem de abrir. Duas armadilhas ao tentar isso a partir de um agente:
 
-- A janela nova herda o ambiente de quem a criou. Se `GCM_INTERACTIVE=never` estiver setado, o GCM não abre o navegador e cai no prompt de senha, que o GitHub **rejeita** (`Password authentication is not supported`). Force `GCM_INTERACTIVE=auto` e `GCM_GITHUB_AUTHMODES=browser`.
+- A janela nova herda o ambiente de quem a criou, e o ambiente do agente traz `GCM_INTERACTIVE=never`. Com ele o GCM não abre o navegador e cai no prompt de senha, que o GitHub **rejeita** (`Password authentication is not supported`). Force `GCM_INTERACTIVE=auto` e `GCM_GITHUB_AUTHMODES=browser` dentro da janela.
 - O `PATH` herdado pode ser anterior à instalação do Git; aí o GCM falha com `Failed to locate 'git.exe' executable on the path`.
 
 A entrada `LegacyGeneric:target=GitHub - https://api.github.com/...` no Cofre é do GitHub Desktop e **não** serve para o git de linha de comando.
 
-### 9. Confirmar que a URL responde
+### 9. Confirmar que a URL serve o binário
+
+Não basta responder 200: o que a URL entrega tem de ser exatamente o APK testado.
 
 ```powershell
-$url = "https://github.com/gerupo/gerupreco/raw/refs/heads/main/app/release/app-v13-release.apk"
-$r = Invoke-WebRequest $url -Method Head -MaximumRedirection 5
-"$($r.StatusCode) - $([math]::Round($r.Headers.'Content-Length'[0]/1MB,2)) MB"
+$url = "https://github.com/gerupo/gerupreco/raw/refs/heads/main/app/release/app-v$v-release.apk"
+$tmp = Join-Path $env:TEMP "verifica-v$v.apk"
+
+Invoke-WebRequest $url -OutFile $tmp -MaximumRedirection 5
+
+$local  = (Get-FileHash "app\release\app-v$v-release.apk" -Algorithm SHA256).Hash
+$remoto = (Get-FileHash $tmp -Algorithm SHA256).Hash
+if ($local -eq $remoto) { "OK - identicos" } else { "DIVERGEM - NAO ATUALIZAR O FIRESTORE" }
 ```
 
-Tem que voltar **200** e o tamanho tem que bater com o arquivo local (~24,5 MB). O GitHub leva alguns segundos para servir o blob depois do push; se der 404, espere e repita.
+O GitHub leva alguns segundos para servir o blob depois do push; se der 404, espere e repita.
 
 ### 10. Só agora: atualizar o Firestore
 
 Sem autenticação — as regras são públicas e a chave está em `app/google-services.json`.
 
 ```powershell
-$key = (Get-Content "app\google-services.json" -Raw | ConvertFrom-Json).client[0].api_key[0].current_key
-
-# Descubra o id do documento (é único na coleção)
 $doc = (Invoke-RestMethod "https://firestore.googleapis.com/v1/projects/gerupreco/databases/(default)/documents/appVersion?key=$key").documents[0]
 
 $body = @{ fields = @{
-    versionCode = @{ integerValue = "13" }
-    url = @{ stringValue = "https://github.com/gerupo/gerupreco/raw/refs/heads/main/app/release/app-v13-release.apk" }
+    versionCode = @{ integerValue = "$v" }
+    url = @{ stringValue = "https://github.com/gerupo/gerupreco/raw/refs/heads/main/app/release/app-v$v-release.apk" }
 } } | ConvertTo-Json -Depth 5
 
 $uri = "https://firestore.googleapis.com/v1/$($doc.name)?key=$key" +
@@ -199,31 +235,39 @@ Invoke-RestMethod $uri -Method Patch -Body $body -ContentType "application/json"
 ### 11. Validar em produção
 
 ```powershell
-(Invoke-RestMethod "https://firestore.googleapis.com/v1/projects/gerupreco/databases/(default)/documents/appVersion?key=$key").documents[0].fields
+$d = (Invoke-RestMethod "https://firestore.googleapis.com/v1/projects/gerupreco/databases/(default)/documents/appVersion?key=$key").documents[0]
+$d.fields.PSObject.Properties | ForEach-Object { "{0}: {1} = {2}" -f $_.Name, $_.Value.PSObject.Properties.Name, $_.Value.PSObject.Properties.Value }
 ```
 
-Depois abra o app num aparelho com a versão **anterior** e confirme que o diálogo aparece, baixa e instala.
+Tem de listar **exatamente dois** campos, `versionCode` como `integerValue` igual a `$v`, e a `url` terminando em `app-v$v-release.apk`.
+
+O teste definitivo é instalar a versão anterior e deixar o app se atualizar sozinho:
+
+```powershell
+& $adb uninstall com.vacari.gerupreco
+& $adb install "app\release\app-v$prev-release.apk"
+& $adb shell appops set com.vacari.gerupreco REQUEST_INSTALL_PACKAGES allow
+& $adb shell am start -n com.vacari.gerupreco/.activity.MainActivity
+```
+
+O diálogo de atualização tem de aparecer, baixar e instalar. Confirme com `dumpsys package | Select-String versionCode` que terminou em `$v`.
 
 ## Rollback
 
-O Firestore é o interruptor. Para voltar atrás, aponte-o para a versão anterior:
+O Firestore é o interruptor. Para voltar atrás, repita o passo 10 com `$v = $prev` e a URL do APK anterior.
 
-```powershell
-# versionCode = 12, url = .../app-v12-release.apk
-```
-
-Os aparelhos que já atualizaram continuam na 13 (o app só força atualização, nunca downgrade), mas param de receber o diálogo. Por isso os APKs antigos ficam no repositório.
+Os aparelhos que já atualizaram permanecem na versão nova (o app força atualização, nunca downgrade), mas param de receber o diálogo. Por isso os APKs antigos ficam no repositório.
 
 ## Armadilhas
 
-- **Compilar com JDK anterior ao 25** falha com `error: invalid source release: 25`. Exporte o `JAVA_HOME` do JBR.
+- **Compilar com JDK anterior ao 25** falha com `error: invalid source release: 25`.
 - **`assembleRelease` sem o `signingConfigs`** gera APK não assinado, que o Android recusa instalar. O bloco já existe no `build.gradle`; se alguém removê-lo, o build "passa" e só quebra na instalação.
 - **Não confie no nome do arquivo para saber a versão.** Confirme com `dumpsys package` ou pelo `output-metadata.json`.
-- **`REQUEST_INSTALL_PACKAGES`**: na primeira atualização o app pede permissão de "instalar apps desconhecidos". É esperado.
+- **`REQUEST_INSTALL_PACKAGES`**: numa instalação limpa a permissão se perde e o app pede de novo. É esperado.
 - **Subir o `targetSdk`** mexe com esse fluxo de auto-instalação via `FileProvider`. Trate como mudança de risco, separada de uma release comum.
 
 ## Segurança — dívida conhecida
 
-`key.jks` e `readmeKey.txt` (senha em texto plano) estão **versionados no repositório**, e agora a senha também está no `app/build.gradle`. Qualquer pessoa com acesso ao repo assina builds como se fossem oficiais e, como o app instala APK a partir de uma URL pública sem verificação extra, isso é um caminho direto para distribuir código malicioso aos aparelhos.
+`key.jks` e `readmeKey.txt` (senha em texto plano) estão **versionados no repositório**, e a senha também está no `app/build.gradle`. Qualquer pessoa com acesso ao repo assina builds como se fossem oficiais e, como o app instala APK a partir de uma URL pública sem verificação extra, isso é um caminho direto para distribuir código malicioso aos aparelhos.
 
 Corrigir de verdade exige rotacionar a chave, tirar os arquivos do versionamento e mover as credenciais para fora do repo (variável de ambiente ou `~/.gradle/gradle.properties`). Enquanto não for feito, **mantenha o repositório privado**.
