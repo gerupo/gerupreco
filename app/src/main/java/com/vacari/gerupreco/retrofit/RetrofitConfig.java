@@ -15,6 +15,10 @@ public class RetrofitConfig {
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder().connectTimeout(6, TimeUnit.SECONDS).readTimeout(6, TimeUnit.SECONDS);
 
+        // Espaca as consultas do carrinho para nao atrair a marcacao de raspagem
+        // da Nota Parana.
+        httpClient.addInterceptor(new RequestSpacer());
+
         httpClient.addInterceptor(chain -> {
             Request request = chain.request().newBuilder()
                     .addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")

@@ -3,6 +3,7 @@ package com.vacari.gerupreco.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.vacari.gerupreco.model.cart.UnitPriceLine;
 import com.vacari.gerupreco.model.cart.UnitPriceReport;
 import com.vacari.gerupreco.model.notaparana.Company;
 import com.vacari.gerupreco.model.notaparana.Product;
@@ -11,6 +12,7 @@ import com.vacari.gerupreco.model.sqlite.CartItem;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -61,11 +63,11 @@ public class CartUnitPriceTest {
     }
 
     /**
-     * Aqui a comparacao e entre produtos, entao nao importa em qual mercado o
-     * menor preco foi achado - so que seja o menor.
+     * A unidade da lista e a oferta, e nao o produto: cada mercado que vende o
+     * item rende uma linha, do melhor preco por unidade ao pior.
      */
     @Test
-    public void usaOMenorPrecoEntreOsMercados() {
+    public void listaUmaLinhaPorEstabelecimento() {
         List<CartItem> cart = Arrays.asList(item("111", "Leite", "1", "L"));
 
         Map<String, List<Product>> prices = new HashMap<>();
@@ -74,8 +76,96 @@ public class CartUnitPriceTest {
 
         UnitPriceReport report = CartUnitPrice.rank(cart, prices, CartCompare.ANY_AGE);
 
-        assertEquals(new BigDecimal("4.00"), report.getLines().get(0).getBestPrice());
+        assertEquals(2, report.getLines().size());
+        assertEquals(new BigDecimal("4.00"), report.getLines().get(0).getPrice());
         assertEquals("Mercado B", report.getLines().get(0).getMarketName());
+        assertEquals(new BigDecimal("6.00"), report.getLines().get(1).getPrice());
+        assertEquals("Mercado A", report.getLines().get(1).getMarketName());
+    }
+
+    /**
+     * Ofertas de produtos diferentes concorrem entre si na mesma lista: a
+     * garrafa cara de um mercado ainda rende mais litro que a lata barata de
+     * outro.
+     */
+    @Test
+    public void ofertasDeProdutosDiferentesSeMisturamNaOrdenacao() {
+        List<CartItem> cart = Arrays.asList(
+                item("111", "Cerveja lata", "350", "ML"),
+                item("222", "Cerveja garrafa", "1", "L"));
+
+        Map<String, List<Product>> prices = new HashMap<>();
+        prices.put("111", Arrays.asList(product("MERC_A", "Mercado A", "3.50"),
+                product("MERC_B", "Mercado B", "4.20")));
+        prices.put("222", Arrays.asList(product("MERC_A", "Mercado A", "11.00"),
+                product("MERC_B", "Mercado B", "8.00")));
+
+        UnitPriceReport report = CartUnitPrice.rank(cart, prices, CartCompare.ANY_AGE);
+
+        assertEquals(4, report.getLines().size());
+        assertEquals(Arrays.asList(
+                        new BigDecimal("8.00"),    // garrafa, Mercado B
+                        new BigDecimal("10.00"),   // lata, Mercado A
+                        new BigDecimal("11.00"),   // garrafa, Mercado A
+                        new BigDecimal("12.00")),  // lata, Mercado B
+                perBase(report));
+    }
+
+    /**
+     * O mesmo mercado aparece varias vezes na resposta - uma por nota, e mais
+     * uma quando o GTIN esta cadastrado com e sem o zero a esquerda. Vale o
+     * menor preco dele, senao a lista viraria o historico de notas do produto.
+     */
+    @Test
+    public void mesmoMercadoRepetidoViraUmaLinhaSoComOMenorPreco() {
+        List<CartItem> cart = Arrays.asList(item("111", "Leite", "1", "L"));
+
+        Map<String, List<Product>> prices = new HashMap<>();
+        prices.put("111", Arrays.asList(product("MERC_A", "Mercado A", "6.00"),
+                product("MERC_A", "Mercado A", "5.00"),
+                product("MERC_A", "Mercado A", "7.00")));
+
+        UnitPriceReport report = CartUnitPrice.rank(cart, prices, CartCompare.ANY_AGE);
+
+        assertEquals(1, report.getLines().size());
+        assertEquals(new BigDecimal("5.00"), report.getLines().get(0).getPrice());
+    }
+
+    /**
+     * Agrupar por nome fundiria as tres lojas distintas chamadas "MUFFATAO".
+     */
+    @Test
+    public void filiaisDeMesmoNomeContamSeparado() {
+        List<CartItem> cart = Arrays.asList(item("111", "Leite", "1", "L"));
+
+        Map<String, List<Product>> prices = new HashMap<>();
+        prices.put("111", Arrays.asList(product("MERC_A", "MUFFATAO", "6.00"),
+                product("MERC_B", "MUFFATAO", "5.00")));
+
+        UnitPriceReport report = CartUnitPrice.rank(cart, prices, CartCompare.ANY_AGE);
+
+        assertEquals(2, report.getLines().size());
+    }
+
+    /**
+     * Aconteceu no aparelho: duas lojas "SUPERMERCADOS IRANI LTDA" a R$ 5,49
+     * davam duas linhas identicas em tudo. Sao ofertas distintas e as duas
+     * devem aparecer, mas o bairro precisa vir junto para separa-las.
+     */
+    @Test
+    public void filiaisDeMesmoNomeEMesmoPrecoSeparamPeloBairro() {
+        List<CartItem> cart = Arrays.asList(item("111", "Cerveja", "350", "ML"));
+
+        Map<String, List<Product>> prices = new HashMap<>();
+        prices.put("111", Arrays.asList(
+                area(product("MERC_A", "SUPERMERCADOS IRANI LTDA", "5.49"), "ALTO ALEGRE"),
+                area(product("MERC_B", "SUPERMERCADOS IRANI LTDA", "5.49"), "PARQUE VERDE")));
+
+        UnitPriceReport report = CartUnitPrice.rank(cart, prices, CartCompare.ANY_AGE);
+
+        assertEquals(2, report.getLines().size());
+        assertEquals("ALTO ALEGRE", report.getLines().get(0).getMarketArea());
+        assertEquals("PARQUE VERDE", report.getLines().get(1).getMarketArea());
     }
 
     /**
@@ -141,6 +231,14 @@ public class CartUnitPriceTest {
         assertEquals(1, report.getUnpriced().size());
     }
 
+    private List<BigDecimal> perBase(UnitPriceReport report) {
+        List<BigDecimal> values = new ArrayList<>();
+        for (UnitPriceLine line : report.getLines()) {
+            values.add(line.getPricePerBase());
+        }
+        return values;
+    }
+
     private CartItem item(String barCode, String description, String size, String unitMeasure) {
         CartItem cartItem = new CartItem();
         cartItem.setBarCode(barCode);
@@ -165,6 +263,11 @@ public class CartUnitPriceTest {
         product.setEstabelecimento(company);
         product.setValor(value);
         product.setDatahora(new Date());
+        return product;
+    }
+
+    private Product area(Product product, String bairro) {
+        product.getEstabelecimento().setBairro(bairro);
         return product;
     }
 

@@ -93,7 +93,7 @@ O botão **Comparar** do rodapé é a única entrada. Ele abre a `CartCompareAct
 | Aba | Ranqueia | Legenda | Lógica |
 | --- | --- | --- | --- |
 | **Mercados** | estabelecimentos | "Onde o carrinho inteiro sai mais barato" | `CartCompare` / `MarketQuoteFragment` |
-| **Produtos** | itens entre si | "Qual produto rende mais por quilo ou litro" | `CartUnitPrice` / `UnitPriceFragment` |
+| **Produtos** | ofertas entre si | "Qual produto rende mais por quilo ou litro" | `CartUnitPrice` / `UnitPriceFragment` |
 
 Antes eram duas telas — a segunda escondida atrás de um ícone mudo na action bar do carrinho — e se confundiam: os dois nomes ("Comparar", "Custo-benefício") descreviam igualmente bem qualquer uma das duas. **As abas são nomeadas pelo substantivo do que cada uma ranqueia**, que é exatamente onde diferem; a legenda logo abaixo completa a frase e troca junto com a aba. Renomear as abas para algo genérico devolve a confusão.
 
@@ -122,7 +122,8 @@ Consequências do desenho que valem preservar:
 
 - **A API não devolve o tamanho da embalagem.** `Product` traz descrição, valores, data, distância, GTIN e estabelecimento — nada de gramas ou mililitros. A única fonte é o `size`/`unitMeasure` do próprio catálogo, copiado para o `CartItem`.
 - **Normalizar não muda nada dentro de um mesmo produto.** A busca é por GTIN, e todas as ofertas de um GTIN têm o mesmo tamanho — dividir pelo volume dá a mesma ordem que o preço bruto. O que a divisão revela é a comparação **entre produtos diferentes**: a lata de 350 ml contra a garrafa de 1 L.
-- **Vale o menor preço de cada produto**, venha de onde vier. O estabelecimento entra só como referência na linha, porque aqui a comparação não é entre mercados.
+- **A unidade da lista é a oferta — um produto num estabelecimento —, não o produto.** O mesmo item aparece uma vez por mercado que o vende, e todas as ofertas concorrem entre si pela posição. Guardar só o menor preço de cada produto respondia "qual produto rende mais", mas escondia por quanto ele sai nos outros mercados, que é o que decide onde comprar.
+- **Uma linha por estabelecimento, com o menor preço dele.** O mesmo mercado aparece várias vezes na resposta — uma por nota registrada, e mais uma quando o GTIN está cadastrado com e sem o zero à esquerda. Sem esse agrupamento a lista viraria o histórico de notas do produto, com a mesma loja repetida em datas diferentes. Agrupa por `estabelecimento.codigo`, nunca por nome, pelo mesmo motivo da aba Mercados.
 - **A quantidade do carrinho não entra na conta.** Seis latas não mudam o preço do litro.
 - **Peso e volume caem na mesma lista ordenada.** São grandezas diferentes e comparar R$/kg de arroz com R$/L de sabão não diz nada sozinho; a lista única foi pedida assim, e cada linha carrega o rótulo da unidade.
 - **Tamanho inválido sai como `unmeasured`, separado dos `unpriced`.** A ação é diferente: um se resolve no cadastro, o outro abrindo a janela de datas. Somar os dois mandaria o usuário procurar no lugar errado.
@@ -132,6 +133,43 @@ Consequências do desenho que valem preservar:
 ### Preço vem como texto com ponto decimal
 
 `PriceUtil.parse` trata `"4.50"` como 4,50. Aplicar a regra pt-BR (ponto = milhar) transformava `3.11` em `311` e os totais saíam cem vezes maiores — o bug passou por revisão de código e só apareceu no aparelho. A vírgula só é considerada separador decimal quando de fato aparece na string.
+
+### A Nota Paraná devolve dados forjados quando acha que é raspagem
+
+Não responde erro: **troca a resposta inteira por registros gerados**, no mesmo formato do JSON legítimo. Descrições e nomes de loja saem embaralhados (`BJLACJA REKEADG TRAKIRAS DORANGJ`, `TEEA DOS ALSIMENTOOS`) e os preços são aleatórios. Foi isso que pôs uma cerveja de 355 ml a R$ 0,54 no topo da aba Produtos.
+
+`DecoyFilter.clean` roda dentro de `RetrofitRequest.searchLowestPrice`, o único funil das duas telas — nenhuma delas tem como saber que a resposta veio forjada. A separação foi medida sobre 1880 registros baixados da API (1486 legítimos, 394 forjados):
+
+| campo | legítimo | forjado |
+| --- | --- | --- |
+| `estabelecimento.codigo` | 43 chars, com maiúsculas | 81–90 chars, só minúsculas |
+| `local` | geohash da loja (11) | ecoa o da consulta (9) |
+| `nm_fan` | preenchido em 55% | sempre vazio |
+| `uf` | sempre PR | PR, PE e ES misturados |
+
+A regra descreve o registro **forjado**, não o legítimo, de propósito: se o formato do identificador mudar, o filtro para de reconhecer a falsificação em vez de descartar o catálogo inteiro como suspeito.
+
+Duas consequências que atrapalham o diagnóstico:
+
+- **A resposta envenenada vem inteira forjada**, nunca misturada. Depois da limpeza sobra lista vazia e o produto aparece como "sem preço" — o que é o desejado, mas é indistinguível de produto sem oferta.
+- **A aba Mercados escondia o problema.** Cada loja forjada carrega um único produto, então cai no grupo dos incompletos e afunda no ranking; a aba Produtos ordena as ofertas só pelo preço por unidade, e o valor absurdo ia direto para o primeiro lugar. Divergência entre as duas abas sobre o mesmo carrinho é sintoma disso.
+
+O gatilho é volume de requisições por IP, e a punição gruda: uma vez marcado, **toda** consulta volta forjada por um bom tempo, inclusive as sequenciais. O carrinho dispara uma por produto de uma vez, então é ele que atrai a marcação — a tela de produto único quase sempre escapa, e é por isso que a busca direta mostra preço são enquanto o carrinho não.
+
+Daí o `RequestSpacer`, um interceptor no `RetrofitConfig` que garante 400 ms entre consultas. Medido contra a API com o mesmo conjunto de códigos de barras:
+
+| | resultado |
+| --- | --- |
+| 9 consultas em paralelo | 5 × HTTP 503, e 1 das 4 restantes veio inteira forjada |
+| 10 consultas a cada 400 ms | 168 registros, nenhum forjado, nenhum erro |
+
+O estado do espaçador é estático porque o limite é por IP e o `RetrofitConfig` constrói um cliente HTTP novo a cada chamada. Ele dorme segurando o monitor de propósito — liberar durante a espera deixaria o carrinho sair em rajada de novo. A espera acontece antes do `proceed`, então os timeouts de conexão e leitura (6 s cada) só começam depois e a fila não provoca timeout.
+
+**Espaçar não substitui o filtro**, porque não desfaz a marcação: uma vez punido, o IP recebe resposta forjada mesmo consultando devagar. O `DecoyFilter` é o que garante que preço inventado não chega na tela; o `RequestSpacer` só evita chegar naquele estado. O custo é o carrinho ficar mais lento — 20 produtos gastam 8 s só de espera.
+
+Para conferir dados suspeitos por fora do app, a consulta é
+`https://menorpreco.notaparana.pr.gov.br/api/v1/produtos?local=6g9fp8frx&offset=0&raio=20&data=-1&ordem=0&gtin=<gtin>`.
+Poucas chamadas e espaçadas — repetir em rajada marca o IP e passa a devolver lixo, inclusive para o aparelho na mesma rede.
 
 ### Novidades da versão
 

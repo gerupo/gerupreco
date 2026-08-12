@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Uma linha do detalhamento de uma oferta: rotulo e valor.
+
+    Empilhado, e nao lado a lado como o quote_line_row: os valores aqui sao
+    textos longos - endereco, descricao da nota - que numa coluna estreita
+    quebrariam em varias linhas ou sairiam cortados.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingVertical="5dp">
+
+    <TextView
+        android:id="@+id/detail_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps"
+        android:textColor="@color/on_surface_variant" />
+
+    <TextView
+        android:id="@+id/detail_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:textAppearance="@style/TextAppearance.GeruPreco.BodySm"
+        android:textColor="@color/on_surface" />
+
+</LinearLayout>

@@ -13,17 +13,17 @@
     <string name="changelog_dismiss">Entendi</string>
 
     <string-array name="changelog_titles">
-        <item>As duas comparações agora são abas</item>
-        <item>Mercados: onde o carrinho sai mais barato</item>
-        <item>Produtos: qual rende mais por quilo ou litro</item>
-        <item>Uma busca só, e a janela de datas vale para as duas</item>
+        <item>Preços impossíveis não aparecem mais</item>
+        <item>Produtos: todas as ofertas, não só a mais barata</item>
+        <item>Toque num produto para ver o detalhamento</item>
+        <item>A busca do carrinho ficou mais lenta de propósito</item>
     </string-array>
 
     <string-array name="changelog_descriptions">
-        <item>O botão da cédula saiu do topo do carrinho. Agora existe um único botão "Comparar", e as duas comparações viraram abas lado a lado — dá para deslizar de uma para a outra.</item>
-        <item>A primeira aba soma o carrinho inteiro em cada mercado e ordena do mais barato, avisando quando falta algum produto na loja.</item>
-        <item>A segunda aba compara os produtos entre si: quanto custa o quilo ou o litro de cada um. É o que o preço da etiqueta esconde — a lata de 350 ml por R$ 3,50 sai a R$ 10,00 o litro, e a garrafa de 1 litro por R$ 8,00 sai por R$ 8,00.</item>
-        <item>Os preços são buscados uma vez só para as duas abas, então trocar de aba é instantâneo. Escolher "últimos 7 dias" reordena as duas na hora.</item>
+        <item>A Nota Paraná às vezes devolve registros inventados, com nomes de loja embaralhados e valores fora da realidade. Era o que fazia uma garrafa de 355 ml aparecer a R$ 1,52 o litro, num mercado que não existe. Agora eles são descartados antes de chegar à tela.</item>
+        <item>A aba Produtos mostrava só o melhor preço de cada item. Agora traz uma linha por estabelecimento que vende o produto, todas na mesma ordem, do melhor para o pior preço por quilo ou litro.</item>
+        <item>Cada oferta abre mostrando o produto como está escrito na nota, o nome e o endereço do estabelecimento, a distância e a data e hora do registro. É por aí que se distinguem duas filiais da mesma rede com o mesmo preço.</item>
+        <item>As consultas agora saem espaçadas, uma de cada vez. É o que evita que a Nota Paraná trate o app como raspagem e passe a devolver aqueles preços inventados. Um carrinho grande leva alguns segundos a mais.</item>
     </string-array>
 
 </resources>

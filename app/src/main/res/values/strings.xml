@@ -95,7 +95,15 @@
     <string name="cart_oldest_price">Preço mais antigo: %1$s</string>
     <string name="cart_unit_price_empty">Nenhum produto do carrinho tem preço nesta janela de datas e tamanho cadastrado para comparar.</string>
     <string name="cart_unit_price_value">%1$s / %2$s</string>
-    <string name="cart_unit_price_at">%1$s em %2$s</string>
     <string name="cart_unit_price_fix">Cadastro incompleto</string>
+
+    <!-- Detalhamento de uma oferta da aba Produtos -->
+    <string name="cart_offer_product">Produto na nota</string>
+    <string name="cart_offer_establishment">Estabelecimento</string>
+    <string name="cart_offer_address">Endereço</string>
+    <string name="cart_offer_distance">Distância</string>
+    <string name="cart_offer_distance_value">%1$s km</string>
+    <string name="cart_offer_registered">Registrado em</string>
+    <string name="cart_offer_registered_value">%1$s (%2$s)</string>
 
 </resources>
