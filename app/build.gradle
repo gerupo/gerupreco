@@ -3,7 +3,7 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
-def appVersionCode = 16
+def appVersionCode = 17
 
 android {
     namespace = 'com.vacari.gerupreco'

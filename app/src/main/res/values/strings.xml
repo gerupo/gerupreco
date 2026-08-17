@@ -47,6 +47,9 @@
     <string name="price_placeholder">R$ 0,00</string>
     <string name="currency_symbol">R$</string>
     <string name="bullet">•</string>
+    <string name="lowest_price_empty">Nenhum preço registrado nesta janela de datas.</string>
+    <!-- Com a janela aberta, a falta de oferta nao e culpa do filtro -->
+    <string name="lowest_price_none">Nenhum preço registrado para este produto.</string>
 
     <!-- Notifications -->
     <string name="price_alerts">Alertas de preço</string>
@@ -84,8 +87,10 @@
     <string name="cart_increase">Aumentar quantidade</string>
     <string name="cart_decrease">Diminuir quantidade</string>
     <string name="cart_searching">Consultando %1$d de %2$d produtos...</string>
-    <string name="cart_price_window">Preços de até</string>
-    <string name="cart_window_any">Qualquer data</string>
+    <!-- A janela de datas vale para as abas do carrinho e para a tela de precos
+         de um produto, entao o nome nao carrega o prefixo do carrinho -->
+    <string name="price_window">Preços de até</string>
+    <string name="price_window_any">Qualquer data</string>
     <string name="cart_coverage">Cobertura</string>
     <string name="cart_show_details">Ver detalhamento</string>
     <string name="cart_hide_details">Ocultar detalhamento</string>

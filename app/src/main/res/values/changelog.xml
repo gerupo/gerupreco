@@ -13,17 +13,15 @@
     <string name="changelog_dismiss">Entendi</string>
 
     <string-array name="changelog_titles">
-        <item>Preços impossíveis não aparecem mais</item>
-        <item>Produtos: todas as ofertas, não só a mais barata</item>
-        <item>Toque num produto para ver o detalhamento</item>
-        <item>A busca do carrinho ficou mais lenta de propósito</item>
+        <item>Filtro por data nos preços de um produto</item>
+        <item>Preços empatados: o mais recente primeiro</item>
+        <item>Menos opções de janela de data</item>
     </string-array>
 
     <string-array name="changelog_descriptions">
-        <item>A Nota Paraná às vezes devolve registros inventados, com nomes de loja embaralhados e valores fora da realidade. Era o que fazia uma garrafa de 355 ml aparecer a R$ 1,52 o litro, num mercado que não existe. Agora eles são descartados antes de chegar à tela.</item>
-        <item>A aba Produtos mostrava só o melhor preço de cada item. Agora traz uma linha por estabelecimento que vende o produto, todas na mesma ordem, do melhor para o pior preço por quilo ou litro.</item>
-        <item>Cada oferta abre mostrando o produto como está escrito na nota, o nome e o endereço do estabelecimento, a distância e a data e hora do registro. É por aí que se distinguem duas filiais da mesma rede com o mesmo preço.</item>
-        <item>As consultas agora saem espaçadas, uma de cada vez. É o que evita que a Nota Paraná trate o app como raspagem e passe a devolver aqueles preços inventados. Um carrinho grande leva alguns segundos a mais.</item>
+        <item>A tela de preços de um produto agora tem os mesmos chips de data das telas do carrinho. A escolha vale para todas elas, e trocar a janela reordena na hora, sem nova busca.</item>
+        <item>É comum a mesma loja aparecer várias vezes pelo mesmo valor, em datas diferentes. Agora, com o preço empatado, a nota mais recente vem primeiro — antes a de duas semanas atrás podia ficar na frente da de ontem.</item>
+        <item>As janelas de 15 e 30 dias saíram. Sobraram 1, 2, 3 e 7 dias e "qualquer data". Quem estava usando uma das que saíram passa a ver 7 dias.</item>
     </string-array>
 
 </resources>

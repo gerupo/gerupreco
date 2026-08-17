@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_screen_x"
             android:layout_marginTop="@dimen/space_stack_gap"
-            android:text="@string/cart_price_window"
+            android:text="@string/price_window"
             android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps.Primary" />
 
         <HorizontalScrollView

@@ -80,6 +80,15 @@ Há ainda `NotificationRepository` para notificações de preço-alvo, mas **ess
 `MainActivity` → `SimpleProportionActivity` (regra de três).
 `LowestPriceProduct` → `CartActivity` (carrinho) → `CartCompareActivity` (comparador, duas abas).
 
+### Preços de um produto (`LowestPriceActivity`)
+
+Lista as ofertas de um único GTIN, com os mesmos chips de janela de data das abas do carrinho (`PriceWindow`). A tela guarda a resposta inteira da API e recorta em memória — trocar o chip reordena na hora, sem consulta nova, pelo mesmo motivo descrito na aba Mercados.
+
+- **A preferência da janela é uma só para o app todo** (`PriceWindow.load/save`, `SharedPreferences` `cart_compare`). Ver um preço listado numa tela e sumido na outra passaria impressão de resultado inconsistente.
+- **`PriceOffers.arrange` é lógica pura e testada** (`PriceOffersTest`): filtra pela janela e ordena por preço crescente e, no empate, data decrescente. O empate é a regra aqui, não a exceção — a lista é o histórico de notas do mesmo GTIN, e a mesma loja aparece várias vezes pelo mesmo valor; sem o desempate a nota de duas semanas atrás ficava na frente da de ontem. Preço ilegível e registro sem data não somem da lista, vão para o fim.
+- **A flag `loaded` segura o aviso de vazio**, pelo mesmo motivo do `isLoaded()` das abas: antes da consulta voltar, vazio é falta de dado, não falta de oferta. Com a janela em "Qualquer data" o aviso troca de texto — mandar afrouxar um filtro que já está aberto manda procurar no lugar errado.
+- **`PriceWindow.revealSelected` rola a fila até o chip marcado ao montar.** A fila não cabe na largura do aparelho e a janela guardada costuma ser uma das últimas; sem isso a tela abre mostrando só chips apagados, o que se lê como "nenhuma janela escolhida". Vale para as abas do carrinho também.
+
 ## Carrinho de compras
 
 Produtos entram por long press na lista (`Adicionar ao carrinho`) ou em lote pelo `AddByTagDialog` (`Adicionar por tag`, no menu da própria `CartActivity` — o catálogo vem do Firestore, então o diálogo só abre depois da consulta). O ícone na action bar da lista traz um badge com o total de **unidades**, não de linhas.
