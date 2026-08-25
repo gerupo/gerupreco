@@ -13,15 +13,11 @@
     <string name="changelog_dismiss">Entendi</string>
 
     <string-array name="changelog_titles">
-        <item>Filtro por data nos preços de um produto</item>
-        <item>Preços empatados: o mais recente primeiro</item>
-        <item>Menos opções de janela de data</item>
+        <item>Arraste para adicionar ao carrinho</item>
     </string-array>
 
     <string-array name="changelog_descriptions">
-        <item>A tela de preços de um produto agora tem os mesmos chips de data das telas do carrinho. A escolha vale para todas elas, e trocar a janela reordena na hora, sem nova busca.</item>
-        <item>É comum a mesma loja aparecer várias vezes pelo mesmo valor, em datas diferentes. Agora, com o preço empatado, a nota mais recente vem primeiro — antes a de duas semanas atrás podia ficar na frente da de ontem.</item>
-        <item>As janelas de 15 e 30 dias saíram. Sobraram 1, 2, 3 e 7 dias e "qualquer data". Quem estava usando uma das que saíram passa a ver 7 dias.</item>
+        <item>Na lista de produtos, arraste a linha para a direita e o produto vai direto para o carrinho — sem segurar o item e escolher no menu. Comece o movimento longe da borda esquerda da tela, senão o celular entende como "voltar". Segurar o produto continua funcionando.</item>
     </string-array>
 
 </resources>

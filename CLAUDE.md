@@ -91,7 +91,14 @@ Lista as ofertas de um único GTIN, com os mesmos chips de janela de data das ab
 
 ## Carrinho de compras
 
-Produtos entram por long press na lista (`Adicionar ao carrinho`) ou em lote pelo `AddByTagDialog` (`Adicionar por tag`, no menu da própria `CartActivity` — o catálogo vem do Firestore, então o diálogo só abre depois da consulta). O ícone na action bar da lista traz um badge com o total de **unidades**, não de linhas.
+Produtos entram por long press na lista (`Adicionar ao carrinho`), **arrastando a linha para a direita** (`SwipeToCart`), ou em lote pelo `AddByTagDialog` (`Adicionar por tag`, no menu da própria `CartActivity` — o catálogo vem do Firestore, então o diálogo só abre depois da consulta). O ícone na action bar da lista traz um badge com o total de **unidades**, não de linhas.
+
+O arrasto é atalho do long press e cai no mesmo `addToCart(position)`. Duas coisas nele não são óbvias:
+
+- **O `ItemTouchHelper` supõe que a linha some depois do swipe**, e aqui o produto continua no catálogo. Sem o `notifyItemChanged(position)` que o callback faz, o card fica parado fora da tela.
+- **O fundo é desenhado no canvas**, em `onChildDraw`, e não por uma view atrás do card: o item é um `MaterialCardView` solto no `RecyclerView`, e um fundo real exigiria envolver cada linha num container só para isso. O recorte é na área revelada, mas o retângulo arredondado cobre a linha inteira — senão o canto redondo acompanharia o dedo pelo meio do card.
+
+O limiar é 35% da largura, abaixo do padrão de 50%, porque a lista é usada de pé no mercado com uma mão só. Vale lembrar que **o gesto tem que começar longe da borda esquerda**: começando nela, a navegação por gestos do sistema captura como "voltar".
 
 O `CartItem` guarda cópia de descrição/tamanho/unidade em vez de referenciar o `Item` do Firestore: a tela monta sem rede, e excluir o produto do catálogo não deixa linha órfã. Adicionar um produto já presente **incrementa a quantidade** em vez de duplicar a linha.
 
@@ -256,11 +263,13 @@ Todas custaram um ciclo de depuração; vale não repetir.
 
 ## Verificação em dispositivo
 
-Há um aparelho físico conectado por adb (Wi-Fi). Como não existe emulador instalado nem suíte de testes de UI, **a verificação real é dirigir o app por adb**. Isso já pegou defeitos que passariam despercebidos numa leitura de código:
+A verificação é feita num aparelho físico por adb sobre Wi-Fi. Como não existe emulador instalado nem suíte de testes de UI, **a verificação real é dirigir o app por adb**. Isso já pegou defeitos que passariam despercebidos numa leitura de código.
+
+**Nem sempre é o mesmo aparelho, nem sempre a mesma rede.** IP, portas e até o que o aparelho permite mudam de sessão para sessão — nada disso deve ser presumido do que funcionou antes, nem deste arquivo. Comece sempre por `adb devices`; se vier vazio, ver *Conectar o aparelho por Wi-Fi* abaixo.
 
 ```powershell
 $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
-& $adb install -r "app\build\outputs\apk\debug\app-v11-debug.apk"
+& $adb install -r "app\build\outputs\apk\debug\app-v<versionCode>-debug.apk"
 & $adb shell monkey -p com.vacari.gerupreco -c android.intent.category.LAUNCHER 1
 
 & $adb shell uiautomator dump /sdcard/uu.xml   # hierarquia com bounds e ids
@@ -274,23 +283,30 @@ Notas que economizam tempo:
 - As Activities além da `MainActivity` são `exported="false"`; `am start` direto falha com `SecurityException`. É preciso navegar pela UI.
 - Um elemento pode existir na hierarquia com o texto certo e mesmo assim **não ser desenhado**. Quando a suspeita for essa, ler os pixels da região (`System.Drawing.Bitmap.GetPixel`) distingue "não renderizado" de "renderizado sem contraste".
 - Long press: `input swipe <x> <y> <x> <y> 900`.
+- **Confirme se a injeção de eventos é permitida antes de planejar em cima dela**, com `input tap 1 1` num canto inerte: sai `exit=0` quando funciona e `SecurityException: INJECT_EVENTS` quando não. Aparelho Xiaomi só injeta com **Opções do desenvolvedor → Depuração USB (Configurações de segurança)** ligado, o que pede conta Mi e chip com dados — e essa opção some ao trocar de aparelho ou ao resetar as opções de desenvolvedor. Sem injeção, leitura (`uiautomator dump`, `screencap`) continua valendo e a saída é pedir para o usuário navegar enquanto se lê a tela.
+- **Para flagrar algo que só existe durante um gesto** — o fundo revelado por um swipe, por exemplo —, encadeie o gesto e a captura numa chamada só, para o aparelho controlar o tempo: `adb shell "input swipe 200 625 520 625 2000 & sleep 1.4; screencap -p /sdcard/mid.png"`. Dois comandos adb separados não acertam a janela.
 
 ### Conectar o aparelho por Wi-Fi
 
-Pareamento e conexão usam **portas diferentes**: a do diálogo "Parear com código" só serve para o `adb pair`, e a de conexão é outra.
+**Não guarde IP nem porta de sessões passadas** — o aparelho pode ser outro, a rede pode ser outra, e as portas do adb sem fio mudam sozinhas. O IP atual quem tem é o usuário, na tela *Depuração sem fio*.
+
+Pareamento e conexão usam **portas diferentes**: a do diálogo "Parear dispositivo com código de pareamento" só serve para o `adb pair`, e a de conexão é a de *Endereço IP e porta*, no topo da tela.
 
 ```powershell
-& $adb pair 192.168.3.91:<porta-do-pareamento> <codigo-de-6-digitos>
+& $adb pair <ip>:<porta-do-pareamento> <codigo-de-6-digitos>
 
 # O mDNS padrao falha com "mdns daemon unavailable"; o backend interno resolve
 $env:ADB_MDNS_OPENSCREEN = "1"
 & $adb kill-server; & $adb start-server
 & $adb mdns services        # descobre o IP:porta de _adb-tls-connect._tcp
-& $adb connect 192.168.3.91:<porta-de-conexao>
+& $adb connect <ip>:<porta-de-conexao>
 ```
 
-- **O aparelho recusa injeção de eventos.** `input tap` estoura `SecurityException: INJECT_EVENTS` — trava da HyperOS/MIUI. Leitura funciona (`uiautomator dump`, `screencap`), mas dirigir a UI exige ligar **Opções do desenvolvedor → Depuração USB (Configurações de segurança)**, que no Xiaomi pede conta Mi e chip com dados. Sem isso, a alternativa é pedir para o usuário navegar e só ler a tela.
-- **O aparelho tem a *release* instalada.** Instalar a debug por cima falha com `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (chaves diferentes), e desinstalar antes apagaria o carrinho em SQLite e as preferências. Para testar sem perder dados, gere e instale a **release**.
+- **Porta e código de pareamento expiram junto com o diálogo.** Fechar a tela invalida os dois, e reabrir gera outros. `adb pair` num par velho falha com `protocol fault (couldn't read status message)` — que parece problema de rede e é só validade vencida. Peça os dois valores de uma vez, com a tela aberta, e pareie na hora.
+- **Porta TCP aberta não significa adb conectável.** `Test-NetConnection` pode dar `TcpTestSucceeded: True` na porta de *pareamento* enquanto `adb connect` recusa — foi assim que uma porta de pareamento passou por porta de conexão.
+- **O `adb mdns services` pode listar mais de um `_adb-tls-connect._tcp` para o mesmo aparelho**, e a primeira linha não é necessariamente a viva (a outra costuma recusar a conexão). Vale tentar cada uma até `adb devices` mostrar `device`. E o mDNS só enxerga o aparelho depois do pareamento — antes disso a lista vem vazia, mesmo com tudo certo.
+- **O aparelho de teste costuma ter a *release* instalada.** Instalar a debug por cima falha com `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (chaves diferentes), e desinstalar antes apagaria o carrinho em SQLite e as preferências. Para testar sem perder dados, gere e instale a **release** — reinstalar o mesmo `versionCode` por cima funciona e preserva os dados, sem precisar subir versão nem tocar no Firestore.
+- **Testar mexe em dados de verdade.** O carrinho é o do usuário: um gesto de teste que adiciona produto fica lá depois. Vale avisar o que o teste deixou para trás em vez de limpar por conta própria.
 
 ## Publicar uma versão
 

@@ -12,6 +12,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -29,6 +30,7 @@ import com.vacari.gerupreco.model.firebase.Item;
 import com.vacari.gerupreco.repository.CartRepository;
 import com.vacari.gerupreco.repository.ItemRepository;
 import com.vacari.gerupreco.update.UpdateJob;
+import com.vacari.gerupreco.util.SwipeToCart;
 
 import java.util.ArrayList;
 
@@ -61,6 +63,21 @@ public class LowestPriceProduct extends AppCompatActivity {
         mAdapter = new ItemAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+
+        configureSwipeToCart(mRecyclerView);
+    }
+
+    /**
+     * Atalho do long press "Adicionar ao carrinho": arrastar a linha para a
+     * direita faz o mesmo. O produto continua na lista, entao o notify e o que
+     * traz o card de volta para o lugar depois do gesto.
+     */
+    private void configureSwipeToCart(RecyclerView recyclerView) {
+        ItemTouchHelper helper = new ItemTouchHelper(new SwipeToCart(this, position -> {
+            addToCart(position);
+            mAdapter.notifyItemChanged(position);
+        }));
+        helper.attachToRecyclerView(recyclerView);
     }
 
     private void configureActions() {
