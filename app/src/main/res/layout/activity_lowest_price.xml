@@ -23,10 +23,15 @@
             android:text="@string/price_window"
             android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps.Primary" />
 
+        <!-- A margem de baixo fica aqui, fora do RecyclerView, de proposito:
+             como ele rola com clipToPadding="false", o card sobe por dentro do
+             proprio padding e encosta nos chips. So o que esta fora da area que
+             rola garante a faixa de separacao. -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_base"
+            android:layout_marginBottom="@dimen/space_stack_gap"
             android:clipToPadding="false"
             android:paddingHorizontal="@dimen/space_screen_x"
             android:scrollbars="none">
@@ -49,7 +54,7 @@
             android:layout_weight="1"
             android:clipToPadding="false"
             android:paddingHorizontal="@dimen/space_screen_x"
-            android:paddingTop="@dimen/space_gutter"
+            android:paddingTop="@dimen/space_stack_gap"
             android:paddingBottom="@dimen/space_margin_x"
             android:scrollbars="none" />
 

@@ -62,6 +62,21 @@
 
         </HorizontalScrollView>
 
+        <!-- O que esta filtrado, escrito por extenso. Fica fora do pager de
+             proposito: o filtro vale para as duas abas, como a janela de datas. -->
+        <TextView
+            android:id="@+id/compare_filter_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/space_screen_x"
+            android:layout_marginTop="@dimen/space_base"
+            android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps.Primary"
+            android:visibility="gone" />
+
+        <!-- A margem de cima e a faixa que separa os chips do conteudo das
+             abas. Ela precisa ficar aqui, fora do pager: os RecyclerViews das
+             abas rolam com clipToPadding="false" e o card sobe por dentro do
+             proprio padding ate encostar nos chips. -->
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/compare_pager"
             android:layout_width="match_parent"

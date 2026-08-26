@@ -12,6 +12,7 @@ import androidx.annotation.PluralsRes;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.card.MaterialCardView;
+import com.vacari.gerupreco.R;
 import com.vacari.gerupreco.model.sqlite.CartItem;
 
 import java.util.List;
@@ -59,6 +60,18 @@ public abstract class CartTabFragment extends Fragment {
 
     protected CartCompareActivity host() {
         return host;
+    }
+
+    /**
+     * Aviso de produto sem preço: com um mercado filtrado a frase muda, porque
+     * "em nenhum estabelecimento" passaria a ser falso - os outros só não estão
+     * sendo olhados.
+     */
+    @PluralsRes
+    protected int unavailablePlural() {
+        return host != null && host.hasMarketFilter()
+                ? R.plurals.cart_unavailable_filtered
+                : R.plurals.cart_unavailable;
     }
 
     /**

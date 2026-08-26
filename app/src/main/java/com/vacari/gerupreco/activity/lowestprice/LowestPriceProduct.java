@@ -68,14 +68,29 @@ public class LowestPriceProduct extends AppCompatActivity {
     }
 
     /**
-     * Atalho do long press "Adicionar ao carrinho": arrastar a linha para a
-     * direita faz o mesmo. O produto continua na lista, entao o notify e o que
-     * traz o card de volta para o lugar depois do gesto.
+     * Atalhos do long press: arrastar a linha para a direita adiciona ao
+     * carrinho, para a esquerda remove. O produto continua na lista, entao o
+     * notify e o que traz o card de volta para o lugar depois do gesto.
      */
     private void configureSwipeToCart(RecyclerView recyclerView) {
-        ItemTouchHelper helper = new ItemTouchHelper(new SwipeToCart(this, position -> {
-            addToCart(position);
-            mAdapter.notifyItemChanged(position);
+        ItemTouchHelper helper = new ItemTouchHelper(new SwipeToCart(this, new SwipeToCart.Host() {
+
+            @Override
+            public boolean isInCart(int position) {
+                return mAdapter.isInCart(position);
+            }
+
+            @Override
+            public void addToCart(int position) {
+                LowestPriceProduct.this.addToCart(position);
+                mAdapter.notifyItemChanged(position);
+            }
+
+            @Override
+            public void removeFromCart(int position) {
+                LowestPriceProduct.this.removeFromCart(position);
+                mAdapter.notifyItemChanged(position);
+            }
         }));
         helper.attachToRecyclerView(recyclerView);
     }
@@ -98,6 +113,7 @@ public class LowestPriceProduct extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateCartBadge();
+        refreshCartMarks();
     }
 
     @Override
@@ -170,11 +186,35 @@ public class LowestPriceProduct extends AppCompatActivity {
     }
 
     /**
-     * Ponto unico de atualizacao apos mexer no carrinho: avisa e refaz o contador.
+     * Tira do carrinho a linha inteira do produto, com a quantidade que tiver:
+     * a lista marca presenca, e nao quantidade - quem ajusta unidade e a tela
+     * do carrinho.
+     */
+    public void removeFromCart(int position) {
+        clearSearchFocus();
+        Item item = mAdapter.getItemByPosition(position);
+
+        if (!CartRepository.removeByBarCode(this, item.getBarCode())) {
+            // A marca estava velha (o carrinho mudou em outra tela): so recolhe.
+            refreshCartMarks();
+            return;
+        }
+
+        onCartChanged(getString(R.string.cart_removed_one, item.getDescription()));
+    }
+
+    /**
+     * Ponto unico de atualizacao apos mexer no carrinho: avisa, refaz o contador
+     * e remarca quais produtos da lista estao la dentro.
      */
     public void onCartChanged(String message) {
         updateCartBadge();
+        refreshCartMarks();
         toast(message);
+    }
+
+    private void refreshCartMarks() {
+        mAdapter.setCartBarCodes(CartRepository.barCodesInCart(this));
     }
 
     public void toast(String message) {

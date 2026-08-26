@@ -24,4 +24,9 @@
     <dimen name="module_icon_size">80dp</dimen>
     <dimen name="module_icon_glyph">40dp</dimen>
 
+    <!-- Marca de "no carrinho" no canto do card. O recuo e a folga que o
+         cabecalho ganha para o chip de tamanho nao ficar embaixo dela. -->
+    <dimen name="cart_mark_size">40dp</dimen>
+    <dimen name="cart_mark_inset">12dp</dimen>
+
 </resources>

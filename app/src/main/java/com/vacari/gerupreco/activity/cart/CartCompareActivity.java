@@ -2,6 +2,9 @@ package com.vacari.gerupreco.activity.cart;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -13,10 +16,14 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.vacari.gerupreco.R;
+import com.vacari.gerupreco.dialog.cart.MarketFilterDialog;
+import com.vacari.gerupreco.model.cart.MarketOption;
+import com.vacari.gerupreco.model.cart.MarketSelection;
 import com.vacari.gerupreco.model.notaparana.Product;
 import com.vacari.gerupreco.model.sqlite.CartItem;
 import com.vacari.gerupreco.repository.CartRepository;
 import com.vacari.gerupreco.retrofit.CartPriceLoader;
+import com.vacari.gerupreco.util.MarketFilter;
 import com.vacari.gerupreco.util.PriceWindow;
 
 import java.util.ArrayList;
@@ -36,6 +43,11 @@ import java.util.Map;
  * so, e a segunda aba abre instantanea. Os precos vem sem filtro de data e o
  * recorte e local (ver CartCompare), entao trocar o chip so refaz o calculo em
  * memoria - a reordenacao e imediata e nao gera trafego novo.
+ *
+ * O filtro de mercado segue a mesma ideia e vive no mesmo lugar: e do host,
+ * vale para as duas abas e recorta em memoria. A diferenca esta em onde ele
+ * entra - o recorte acontece antes das abas lerem, dentro de getPrices(), de
+ * modo que nem CartCompare nem CartUnitPrice sabem que ele existe.
  */
 public class CartCompareActivity extends AppCompatActivity {
 
@@ -49,8 +61,17 @@ public class CartCompareActivity extends AppCompatActivity {
     private ProgressDialog progressDialog;
     private TextView caption;
 
+    private TextView filterLabel;
+
     private List<CartItem> cartItems = new ArrayList<>();
+
+    /** Resposta inteira da consulta; e dela que sai a lista de mercados. */
+    private Map<String, List<Product>> allPrices = new HashMap<>();
+
+    /** O que as abas leem: allPrices recortado pelo mercado escolhido. */
     private Map<String, List<Product>> prices = new HashMap<>();
+
+    private MarketSelection marketSelection;
     private boolean loaded;
     private int windowDays;
 
@@ -73,6 +94,7 @@ public class CartCompareActivity extends AppCompatActivity {
 
     private void initGUI() {
         caption = findViewById(R.id.compare_caption);
+        filterLabel = findViewById(R.id.compare_filter_label);
 
         ViewPager2 pager = findViewById(R.id.compare_pager);
         pager.setAdapter(new FragmentStateAdapter(this) {
@@ -120,9 +142,13 @@ public class CartCompareActivity extends AppCompatActivity {
         CartPriceLoader.load(barCodes,
                 done -> runOnUiThread(() -> updateProgress(done, barCodes.size())),
                 result -> runOnUiThread(() -> {
+                    allPrices = result;
                     prices = result;
                     loaded = true;
                     closeProgress();
+                    // A acao de filtrar so aparece agora: a lista de mercados
+                    // sai das ofertas que voltaram.
+                    invalidateOptionsMenu();
                     renderTabs();
                 }));
     }
@@ -150,6 +176,15 @@ public class CartCompareActivity extends AppCompatActivity {
         return prices;
     }
 
+    /**
+     * Com filtro ativo, vazio quer dizer que aquele mercado nao tem, e nao que
+     * nenhum tem - mandar afrouxar a janela de datas seria mandar procurar no
+     * lugar errado.
+     */
+    boolean hasMarketFilter() {
+        return marketSelection != null;
+    }
+
     int getWindowDays() {
         return windowDays;
     }
@@ -157,6 +192,60 @@ public class CartCompareActivity extends AppCompatActivity {
     /** Falso ate a consulta voltar - as abas seguram o aviso de vazio ate la. */
     boolean isLoaded() {
         return loaded;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_cart_compare, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    /** Sem precos na mao nao ha mercado para escolher. */
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem filter = menu.findItem(R.id.menu_compare_filter);
+        if (filter != null) {
+            filter.setVisible(loaded && !MarketFilter.options(allPrices).isEmpty());
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menu_compare_filter) {
+            openMarketFilter();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void openMarketFilter() {
+        List<MarketOption> options = MarketFilter.options(allPrices);
+        new MarketFilterDialog(this, options, marketSelection, this::applyMarketFilter).show();
+    }
+
+    /** Selecao nula e o "Limpar filtro": volta a valer a resposta inteira. */
+    private void applyMarketFilter(MarketSelection selection) {
+        marketSelection = selection;
+        prices = selection == null
+                ? allPrices
+                : MarketFilter.apply(allPrices, selection.getCodes());
+
+        renderFilterLabel();
+        renderTabs();
+    }
+
+    private void renderFilterLabel() {
+        if (marketSelection == null) {
+            filterLabel.setVisibility(View.GONE);
+            return;
+        }
+
+        filterLabel.setText(marketSelection.getAddress() == null
+                ? getString(R.string.cart_filter_active_all, marketSelection.getName())
+                : getString(R.string.cart_filter_active, marketSelection.getName(),
+                        marketSelection.getAddress()));
+        filterLabel.setVisibility(View.VISIBLE);
     }
 
     private void showProgress(int total) {

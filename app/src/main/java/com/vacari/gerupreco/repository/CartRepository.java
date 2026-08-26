@@ -9,7 +9,9 @@ import com.vacari.gerupreco.model.sqlite.CartItem;
 import com.vacari.gerupreco.util.StringUtil;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Carrinho local. Segue o mesmo formato estatico e sincrono do
@@ -45,6 +47,21 @@ public class CartRepository {
             units += cartItem.getQuantity();
         }
         return units;
+    }
+
+    /**
+     * Codigos de barras que estao no carrinho, para a lista de produtos marcar
+     * quais ja foram para la. Vem em Set porque a lista consulta uma vez por
+     * bind, e nao vale varrer o carrinho inteiro a cada linha.
+     */
+    public static Set<String> barCodesInCart(Context context) {
+        Set<String> barCodes = new HashSet<>();
+        for (CartItem cartItem : findAll(context)) {
+            if (StringUtil.isNotEmpty(cartItem.getBarCode())) {
+                barCodes.add(cartItem.getBarCode());
+            }
+        }
+        return barCodes;
     }
 
     /**
@@ -105,6 +122,27 @@ public class CartRepository {
     public static void delete(Context context, CartItem cartItem) {
         try {
             dao(context).delete(cartItem);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Tira do carrinho a linha inteira do produto, com a quantidade que tiver.
+     * O contrario de {@link #add}, para quem so tem o produto do catalogo em
+     * maos e nao o CartItem.
+     *
+     * @return false se o produto nao estava la - a lista pode ter sido marcada
+     * antes de alguma mudanca feita na tela do carrinho.
+     */
+    public static boolean removeByBarCode(Context context, String barCode) {
+        try {
+            CartItem cartItem = findByBarCode(context, barCode);
+            if (cartItem == null) {
+                return false;
+            }
+            dao(context).delete(cartItem);
+            return true;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

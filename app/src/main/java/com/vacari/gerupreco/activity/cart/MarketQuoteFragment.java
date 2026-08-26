@@ -1,6 +1,7 @@
 package com.vacari.gerupreco.activity.cart;
 
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DefaultItemAnimator;
@@ -43,12 +44,17 @@ public class MarketQuoteFragment extends CartTabFragment {
 
         mAdapter.refresh(comparison.getQuotes());
 
+        // Com um mercado filtrado o vazio tem outra causa, e outra saida.
+        TextView empty = view.findViewById(R.id.compare_empty);
+        empty.setText(host().hasMarketFilter()
+                ? R.string.cart_compare_empty_filtered
+                : R.string.cart_compare_empty);
+
         // O aviso de vazio so vale depois da consulta; antes dela o resultado
         // esta vazio por falta de dados, nao por falta de oferta.
-        view.findViewById(R.id.compare_empty).setVisibility(
-                host().isLoaded() && comparison.isEmpty() ? View.VISIBLE : View.GONE);
+        empty.setVisibility(host().isLoaded() && comparison.isEmpty() ? View.VISIBLE : View.GONE);
 
         renderWarning(view, R.id.compare_unavailable_card, R.id.compare_unavailable_text,
-                comparison.getUnavailable(), R.plurals.cart_unavailable);
+                comparison.getUnavailable(), unavailablePlural());
     }
 }

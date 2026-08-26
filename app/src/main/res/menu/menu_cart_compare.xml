@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Aparece so depois da consulta: a lista de mercados sai das ofertas
+         que voltaram, entao antes disso nao haveria o que escolher. -->
+    <item
+        android:id="@+id/menu_compare_filter"
+        android:icon="@drawable/ic_filter_list_24"
+        android:title="@string/cart_filter"
+        app:showAsAction="always" />
+
+</menu>

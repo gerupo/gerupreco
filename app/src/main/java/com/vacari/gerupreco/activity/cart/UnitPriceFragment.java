@@ -1,6 +1,7 @@
 package com.vacari.gerupreco.activity.cart;
 
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DefaultItemAnimator;
@@ -44,14 +45,19 @@ public class UnitPriceFragment extends CartTabFragment {
 
         mAdapter.refresh(report.getLines());
 
+        // Com um mercado filtrado o vazio tem outra causa, e outra saida.
+        TextView empty = view.findViewById(R.id.unit_price_empty);
+        empty.setText(host().hasMarketFilter()
+                ? R.string.cart_unit_price_empty_filtered
+                : R.string.cart_unit_price_empty);
+
         // O aviso de vazio so vale depois da consulta; antes dela o resultado
         // esta vazio por falta de dados, nao por falta de oferta.
-        view.findViewById(R.id.unit_price_empty).setVisibility(
-                host().isLoaded() && report.isEmpty() ? View.VISIBLE : View.GONE);
+        empty.setVisibility(host().isLoaded() && report.isEmpty() ? View.VISIBLE : View.GONE);
 
         renderWarning(view, R.id.unit_price_unmeasured_card, R.id.unit_price_unmeasured_text,
                 report.getUnmeasured(), R.plurals.cart_unmeasured);
         renderWarning(view, R.id.unit_price_unpriced_card, R.id.unit_price_unpriced_text,
-                report.getUnpriced(), R.plurals.cart_unavailable);
+                report.getUnpriced(), unavailablePlural());
     }
 }

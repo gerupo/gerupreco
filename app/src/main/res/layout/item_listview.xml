@@ -9,99 +9,118 @@
     android:clickable="true"
     android:focusable="true">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/space_gutter">
+        android:layout_height="wrap_content">
 
-        <!-- Product name + unit badge -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:baselineAligned="false"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:padding="@dimen/space_gutter">
 
-            <TextView
-                android:id="@+id/item_description"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/product"
-                android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
-
+            <!-- Product name + unit badge -->
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:id="@+id/item_header"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_stack_gap"
-                android:background="@drawable/bg_chip"
+                android:baselineAligned="false"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <TextView
+                    android:id="@+id/item_description"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/product"
+                    android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_stack_gap"
+                    android:background="@drawable/bg_chip"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:layout_marginEnd="6dp"
+                        android:contentDescription="@string/size"
+                        android:src="@drawable/ic_sell_24"
+                        app:tint="@color/primary_container" />
+
+                    <TextView
+                        android:id="@+id/item_size"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/size"
+                        android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps"
+                        android:textColor="@color/on_surface" />
+
+                    <TextView
+                        android:id="@+id/item_unitMeasure"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="@string/unit"
+                        android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps"
+                        android:textColor="@color/on_surface" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Tags (escondido quando o produto nao tem nenhuma) -->
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/item_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_stack_gap"
+                app:chipSpacingHorizontal="6dp"
+                app:chipSpacingVertical="4dp"
+                app:singleLine="false" />
+
+            <!-- Call to action -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_stack_gap"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/see_prices"
+                    android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps" />
+
                 <ImageView
-                    android:layout_width="14dp"
-                    android:layout_height="14dp"
-                    android:layout_marginEnd="6dp"
-                    android:contentDescription="@string/size"
-                    android:src="@drawable/ic_sell_24"
-                    app:tint="@color/primary_container" />
-
-                <TextView
-                    android:id="@+id/item_size"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/size"
-                    android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps"
-                    android:textColor="@color/on_surface" />
-
-                <TextView
-                    android:id="@+id/item_unitMeasure"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:text="@string/unit"
-                    android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps"
-                    android:textColor="@color/on_surface" />
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@string/see_prices"
+                    android:src="@drawable/ic_chevron_right_24"
+                    app:tint="@color/secondary" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Tags (escondido quando o produto nao tem nenhuma) -->
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/item_tags"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_stack_gap"
-            app:chipSpacingHorizontal="6dp"
-            app:chipSpacingVertical="4dp"
-            app:singleLine="false" />
+        <!-- Marca de "ja esta no carrinho". Desenha por cima do conteudo, e por
+             isso o cabecalho ganha uma margem extra no bind: sem ela o
+             triangulo cobriria o chip de tamanho, que fica neste mesmo canto. -->
+        <ImageView
+            android:id="@+id/item_in_cart"
+            android:layout_width="@dimen/cart_mark_size"
+            android:layout_height="@dimen/cart_mark_size"
+            android:layout_gravity="top|end"
+            android:contentDescription="@string/cart_in_cart"
+            android:src="@drawable/ic_cart_corner_mark"
+            android:visibility="gone" />
 
-        <!-- Call to action -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_stack_gap"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/see_prices"
-                android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps" />
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:contentDescription="@string/see_prices"
-                android:src="@drawable/ic_chevron_right_24"
-                app:tint="@color/secondary" />
-
-        </LinearLayout>
-
-    </LinearLayout>
+    </FrameLayout>
 
 </com.google.android.material.card.MaterialCardView>

@@ -93,12 +93,26 @@ Lista as ofertas de um único GTIN, com os mesmos chips de janela de data das ab
 
 Produtos entram por long press na lista (`Adicionar ao carrinho`), **arrastando a linha para a direita** (`SwipeToCart`), ou em lote pelo `AddByTagDialog` (`Adicionar por tag`, no menu da própria `CartActivity` — o catálogo vem do Firestore, então o diálogo só abre depois da consulta). O ícone na action bar da lista traz um badge com o total de **unidades**, não de linhas.
 
-O arrasto é atalho do long press e cai no mesmo `addToCart(position)`. Duas coisas nele não são óbvias:
+### Arrastar para os dois lados, e a marca de canto
 
-- **O `ItemTouchHelper` supõe que a linha some depois do swipe**, e aqui o produto continua no catálogo. Sem o `notifyItemChanged(position)` que o callback faz, o card fica parado fora da tela.
+Arrastar a linha para a direita adiciona ao carrinho; para a esquerda, tira. Os dois gestos são atalhos do long press e caem nos mesmos `addToCart(position)` / `removeFromCart(position)` da `LowestPriceProduct` — a `SwipeToCart.Host` que a tela monta só acrescenta o `notifyItemChanged`.
+
+- **Remover só é liberado no produto que já está no carrinho.** `getSwipeDirs` consulta `Host.isInCart`; num produto que não está lá o card simplesmente não cede para a esquerda, e essa resistência diz "não há o que remover" sem precisar de texto.
+- **Remover tira a linha inteira, com a quantidade que tiver.** A lista marca presença, não quantidade; quem ajusta unidade é a tela do carrinho. Pelo mesmo motivo o long press mantém "Adicionar ao carrinho" visível mesmo no produto já presente — ali ele soma uma unidade, como o arrasto para a direita — e só acrescenta "Remover do carrinho" quando há o que remover.
+- **O `ItemTouchHelper` supõe que a linha some depois do swipe**, e aqui o produto continua no catálogo. Sem o `notifyItemChanged(position)` que o `Host` faz, o card fica parado fora da tela.
 - **O fundo é desenhado no canvas**, em `onChildDraw`, e não por uma view atrás do card: o item é um `MaterialCardView` solto no `RecyclerView`, e um fundo real exigiria envolver cada linha num container só para isso. O recorte é na área revelada, mas o retângulo arredondado cobre a linha inteira — senão o canto redondo acompanharia o dedo pelo meio do card.
 
-O limiar é 35% da largura, abaixo do padrão de 50%, porque a lista é usada de pé no mercado com uma mão só. Vale lembrar que **o gesto tem que começar longe da borda esquerda**: começando nela, a navegação por gestos do sistema captura como "voltar".
+O limiar é 35% da largura, abaixo do padrão de 50%, porque a lista é usada de pé no mercado com uma mão só. Vale lembrar que **o gesto tem que começar longe das bordas laterais**: encostado nelas, a navegação por gestos do sistema captura como "voltar".
+
+#### A marca de "já está no carrinho"
+
+O card do produto que está no carrinho ganha um triângulo no canto superior direito com o ícone do carrinho (`item_in_cart` + `ic_cart_corner_mark`), nas mesmas cores do fundo do arrasto que o produziu — a marca é o resultado visível daquele gesto.
+
+- **A marca desenha por cima do conteúdo**, então o cabeçalho recebe `cart_mark_inset` de margem no bind. Sem isso o triângulo cobre o chip de tamanho/unidade, que mora exatamente nesse canto.
+- **O raio do triângulo é o `radius_lg` do card** (16). Mudar um sem o outro deixa a marca desalinhada da borda arredondada.
+- **O glifo do carrinho vive dentro de um `<group>` do vetor**, encolhido e deslocado para caber no triângulo: o que sair dele é desenhado sobre o fundo escuro do card, em `on_primary`, e some.
+- **A borda do card troca junto** (`outline_variant` → `primary_container`). É ela que faz o produto no carrinho saltar quando a lista é percorrida de relance, sem olhar canto por canto.
+- **Quem sabe o estado é o adapter, não o banco.** `ItemAdapter.setCartBarCodes` guarda os códigos de barras num `Set`, e a Activity o refaz no `onResume` e a cada `onCartChanged` — inclusive na volta da `CartActivity`, que pode ter esvaziado tudo. Consultar o SQLite dentro do `onBindViewHolder` seria uma query por linha rolada.
 
 O `CartItem` guarda cópia de descrição/tamanho/unidade em vez de referenciar o `Item` do Firestore: a tela monta sem rede, e excluir o produto do catálogo não deixa linha órfã. Adicionar um produto já presente **incrementa a quantidade** em vez de duplicar a linha.
 
@@ -120,6 +134,19 @@ Consequências do desenho que valem preservar:
 - **`isLoaded()` segura o aviso de vazio.** Antes da consulta voltar o resultado está vazio por falta de dados, não por falta de oferta — sem a guarda, a aba pisca "nenhum estabelecimento tem os produtos".
 - **A raiz de cada fragment é um `FrameLayout` que não rola.** Quem tem `fitsSystemWindows` é a raiz da Activity; promover o `RecyclerView` a raiz do fragment reabre a armadilha de insets descrita mais abaixo.
 - **Fragments existem só aqui.** O resto do app é Activity pura com `findViewById`; `androidx.fragment` e `androidx.viewpager2` entraram no `build.gradle` por causa destas abas.
+
+#### Filtro de mercado
+
+O ícone na action bar abre um diálogo com dois campos encadeados — **Mercado** e **Endereço** — mais **Limpar** e **Aplicar**. O filtro vale para as duas abas, como a janela de datas, e o que está valendo aparece escrito acima do pager.
+
+- **O recorte é do host, e acontece antes das abas lerem.** `CartCompareActivity` guarda a resposta inteira em `allPrices` e devolve em `getPrices()` o mapa já filtrado. Por isso `CartCompare` e `CartUnitPrice` não sabem que o filtro existe: continuam recebendo preços por código de barras, só que menos. Levar o filtro para dentro delas duplicaria a regra nas duas.
+- **Identidade é `estabelecimento.codigo`, nunca o nome.** O nome só agrupa a primeira escolha, e é por isso que existe o segundo campo: há três lojas chamadas "MUFFATAO". "Todos os endereços" resolve para o conjunto de códigos das filiais daquele nome — é o único caso em que o nome vale sozinho.
+- **A lista de mercados sai da resposta inteira, sem recortar pela janela de datas.** Se respeitasse a janela, a lista mudaria a cada troca de chip e um mercado já escolhido poderia sumir dela continuando aplicado.
+- **`MarketFilter.apply` preserva as chaves sem oferta.** O produto que a loja filtrada não vende continua no mapa com lista vazia, e por isso segue aparecendo como faltante em vez de sumir da comparação.
+- **Com filtro ativo os textos mudam** — o aviso de vazio e o de "sem preço". "Em nenhum estabelecimento" passaria a ser falso: os outros mercados podem ter o produto, só não estão sendo olhados. Mandar afrouxar a janela de datas seria mandar procurar no lugar errado.
+- **A ação só aparece depois da consulta** (`onPrepareOptionsMenu` + `invalidateOptionsMenu` no retorno): a lista de mercados sai das ofertas que voltaram.
+- **Reabrir o diálogo mostra o filtro que está valendo.** Sem restaurar a seleção, ele voltaria no primeiro mercado da lista e "Aplicar" trocaria o filtro sem o usuário ter escolhido nada. O `Spinner` reavisa a seleção restaurada, e a guarda por nome em `MarketFilterDialog` impede que esse reaviso jogue o endereço de volta para "todos".
+- **`MarketFilter` é lógica pura e testada** (`MarketFilterTest`).
 
 #### Aba Mercados
 
@@ -252,6 +279,7 @@ Fontes **Plus Jakarta Sans** (estrutura) e **JetBrains Mono** (rótulos utilitá
 Todas custaram um ciclo de depuração; vale não repetir.
 
 - **`fitsSystemWindows` num container que rola.** Promover `RecyclerView` a raiz do layout com `fitsSystemWindows="true"` faz o `ActionBarOverlayLayout` esticá-lo pela janela inteira e converter os insets em padding; junto com `clipToPadding="false"`, os itens passam a desenhar por baixo da action bar e da status bar. Manter sempre um container não-rolável na raiz absorvendo os insets.
+- **Espaço entre um filtro fixo e a lista tem que ficar fora do container que rola.** Os chips de janela de data ficavam colados no primeiro card ao rolar: o `paddingTop` do `RecyclerView` não segura nada, porque com `clipToPadding="false"` o card sobe por dentro do próprio padding até encostar. A faixa vem de `layout_marginBottom` no `HorizontalScrollView` (tela de preços) e de `layout_marginTop` no `ViewPager2` (comparador) — 12dp nas duas, sempre fora da área que rola.
 - **Diálogos não herdam `windowSoftInputMode` da Activity.** Têm janela própria; sem `getWindow().setSoftInputMode(SOFT_INPUT_ADJUST_RESIZE)` o teclado cobre os botões Salvar/Cancelar.
 - **Activities com campo de texto precisam de `android:windowSoftInputMode="adjustResize"`** no manifesto, ou o teclado cobre FAB e conteúdo.
 - **`Spinner` precisa de largura folgada.** O padding da seta consome ~55dp; com pouco espaço, unidades de duas letras (`ML`, `KG`) simplesmente deixam de ser desenhadas enquanto as de uma letra (`G`, `L`) aparecem. Atenção especial ao trocar `layout_width="match_parent"`+peso por `0dp`+peso — a distribuição de largura resultante é bem diferente.

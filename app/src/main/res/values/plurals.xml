@@ -31,6 +31,13 @@
         <item quantity="other">%1$d produtos sem preço em nenhum estabelecimento: %2$s</item>
     </plurals>
 
+    <!-- Com um mercado filtrado, "nenhum estabelecimento" seria mentira: os
+         outros podem ter o produto, só não estão sendo olhados. -->
+    <plurals name="cart_unavailable_filtered">
+        <item quantity="one">%1$d produto sem preço no mercado filtrado: %2$s</item>
+        <item quantity="other">%1$d produtos sem preço no mercado filtrado: %2$s</item>
+    </plurals>
+
     <plurals name="cart_unmeasured">
         <item quantity="one">%1$d produto sem tamanho válido no cadastro ficou de fora: %2$s. Edite o produto na lista e informe tamanho e unidade.</item>
         <item quantity="other">%1$d produtos sem tamanho válido no cadastro ficaram de fora: %2$s. Edite os produtos na lista e informe tamanho e unidade.</item>

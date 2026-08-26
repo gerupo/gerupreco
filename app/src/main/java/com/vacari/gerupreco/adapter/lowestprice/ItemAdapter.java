@@ -6,9 +6,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
@@ -20,7 +22,9 @@ import com.vacari.gerupreco.util.StringUtil;
 import com.vacari.gerupreco.util.TagUtil;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ItemAdapter extends RecyclerView.Adapter {
 
@@ -28,10 +32,38 @@ public class ItemAdapter extends RecyclerView.Adapter {
     private List<Item> allItemList;
     private LowestPriceProduct mActivity;
 
+    /**
+     * Codigos de barras que estao no carrinho. Fica guardado aqui em vez de ser
+     * consultado a cada bind: o carrinho vive em SQLite e a lista rola.
+     */
+    private final Set<String> cartBarCodes = new HashSet<>();
+
     public ItemAdapter(LowestPriceProduct mActivity) {
         this.itemList = new ArrayList<>();
         this.allItemList = new ArrayList<>();
         this.mActivity = mActivity;
+    }
+
+    /**
+     * Marca quais produtos ja estao no carrinho. Quem chama e a Activity,
+     * sempre que o carrinho muda - inclusive na volta da tela do carrinho, que
+     * pode ter esvaziado tudo.
+     */
+    public void setCartBarCodes(Set<String> barCodes) {
+        cartBarCodes.clear();
+        cartBarCodes.addAll(barCodes);
+        notifyDataSetChanged();
+    }
+
+    public boolean isInCart(int position) {
+        if (position < 0 || position >= itemList.size()) {
+            return false;
+        }
+        return isInCart(itemList.get(position));
+    }
+
+    private boolean isInCart(Item item) {
+        return StringUtil.isNotEmpty(item.getBarCode()) && cartBarCodes.contains(item.getBarCode());
     }
 
     public void refresh(List<Item> itemList) {
@@ -64,6 +96,31 @@ public class ItemAdapter extends RecyclerView.Adapter {
         holder.unitMeasure.setText(item.getUnitMeasure());
 
         bindTags(holder, item);
+        bindCartMark(holder, item);
+    }
+
+    /**
+     * A marca de canto cobre o cabecalho, entao o chip de tamanho precisa
+     * recuar enquanto ela estiver visivel. A borda do card muda junto: de longe
+     * e ela que faz o produto no carrinho saltar na lista.
+     */
+    private void bindCartMark(ViewHolder holder, Item item) {
+        boolean inCart = isInCart(item);
+
+        holder.inCartMark.setVisibility(inCart ? View.VISIBLE : View.GONE);
+
+        holder.card.setStrokeColor(ContextCompat.getColor(mActivity,
+                inCart ? R.color.primary_container : R.color.outline_variant));
+
+        int inset = inCart
+                ? mActivity.getResources().getDimensionPixelSize(R.dimen.cart_mark_inset)
+                : 0;
+        ViewGroup.MarginLayoutParams params =
+                (ViewGroup.MarginLayoutParams) holder.header.getLayoutParams();
+        if (params.getMarginEnd() != inset) {
+            params.setMarginEnd(inset);
+            holder.header.setLayoutParams(params);
+        }
     }
 
     private void bindTags(ViewHolder holder, Item item) {
@@ -158,6 +215,8 @@ public class ItemAdapter extends RecyclerView.Adapter {
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
 
         final MaterialCardView card;
+        final View header;
+        final ImageView inCartMark;
         final TextView description;
         final TextView size;
         final TextView unitMeasure;
@@ -168,6 +227,8 @@ public class ItemAdapter extends RecyclerView.Adapter {
             view.setOnCreateContextMenuListener(this);
 
             card = view.findViewById(R.id.item_card);
+            header = view.findViewById(R.id.item_header);
+            inCartMark = view.findViewById(R.id.item_in_cart);
             description = view.findViewById(R.id.item_description);
             size = view.findViewById(R.id.item_size);
             unitMeasure = view.findViewById(R.id.item_unitMeasure);
@@ -184,10 +245,21 @@ public class ItemAdapter extends RecyclerView.Adapter {
 
         private void configureMenuActions(ContextMenu menu) {
             int position = getAdapterPosition();
+            boolean inCart = isInCart(position);
 
-            MenuItem addToCart = (MenuItem) menu.findItem(R.id.action_add_to_cart);
+            // Adicionar continua valendo para produto ja no carrinho: soma uma
+            // unidade, como o arrasto para a direita. Remover so aparece quando
+            // ha o que remover.
+            MenuItem addToCart = menu.findItem(R.id.action_add_to_cart);
             addToCart.setOnMenuItemClickListener(menuItem -> {
                 mActivity.addToCart(position);
+                return true;
+            });
+
+            MenuItem removeFromCart = menu.findItem(R.id.action_remove_from_cart);
+            removeFromCart.setVisible(inCart);
+            removeFromCart.setOnMenuItemClickListener(menuItem -> {
+                mActivity.removeFromCart(position);
                 return true;
             });
 
