@@ -121,14 +121,25 @@ nada instalado no host além do Docker.
 ```bash
 cd ~/gerupreco/functions
 npm run build      # docker build --no-cache -t geruprecotracking .
-
-export GERUPRECO_CREDENTIALS=~/.config/gerupreco/service-account.json
 npm run docker     # sobe com --restart=unless-stopped, publicando :3456
 ```
 
-O `npm run docker` monta a credencial em tempo de execução, e é por isso que
-`GERUPRECO_CREDENTIALS` precisa estar definida — ele expande essa variável no
-`-v`.
+O `npm run docker` monta a credencial em tempo de execução, procurando por
+padrão em `~/.config/gerupreco/service-account.json` — o mesmo lugar do passo 2,
+então quem seguiu o guia não precisa configurar nada. Para outro caminho:
+
+```bash
+GERUPRECO_CREDENTIALS=/outro/lugar/chave.json npm run docker
+```
+
+Para ligar o gatilho manual, defina `TRACKING_TOKEN` — ele é repassado ao
+container só quando existe.
+
+Ele **confere o caminho antes de chamar o docker**, e isso evita duas mensagens
+inúteis. Com a variável vazia, o docker reclamava do formato do `-v`
+(`empty section between colons`) em vez de dizer que faltava a credencial. E
+apontando para um arquivo inexistente, o docker **cria um diretório vazio ali** —
+o container sobe, e a falha só aparece bem depois, dizendo outra coisa.
 
 **A chave não entra na imagem de propósito.** Copiada com `COPY`, ela ficaria
 numa camada legível por qualquer um que tenha a imagem, e ela dá escrita no

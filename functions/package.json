@@ -13,7 +13,7 @@
     "once:dry": "node run-once.js --dry-run",
     "serve": "node server.js",
     "build": "docker build --no-cache -t geruprecotracking .",
-    "docker": "docker run -d --name geruprecotracking --restart=unless-stopped -p 3456:3456 -v \"$GERUPRECO_CREDENTIALS\":/run/secrets/service-account.json:ro geruprecotracking",
+    "docker": "node docker-run.js",
     "logs": "firebase functions:log --only checkTrackedPrices",
     "deploy": "firebase deploy --only functions"
   },

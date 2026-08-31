@@ -8,6 +8,7 @@ README.md
 .gitignore
 .dockerignore
 Dockerfile
+docker-run.js
 
 # Rede de seguranca: credencial nunca entra na imagem, nem por engano.
 service-account*.json
