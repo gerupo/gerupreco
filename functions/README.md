@@ -5,13 +5,19 @@ cadastro: quem consulta a Nota Paraná, compara com o alvo e dispara a
 notificação é esta rotina, às **09:00, 12:00, 15:00 e 18:00** (horário de
 Brasília).
 
-> ⚠️ **A Cloud Function não funciona, e o motivo não é o código.** Medido em
-> 30/08/2026: a Nota Paraná devolveu **100% de registros forjados em todas as
-> rodadas** saídas dela — inclusive na primeira, antes de qualquer volume —
-> enquanto os mesmos GTINs consultados de um IP residencial no mesmo minuto
-> voltaram íntegros. É o tratamento dado a IP de datacenter, não limite de
-> requisições. Quem roda a rotina de verdade é o **`run-once.js`**, num servidor
-> doméstico. Ver *Rodando no servidor de casa*.
+> **Por que num servidor doméstico, e não na nuvem.** Isto começou como Cloud
+> Function. Medido em 30/08/2026: a Nota Paraná devolveu **100% de registros
+> forjados em todas as rodadas** saídas dela — inclusive na primeira, antes de
+> qualquer volume acumulado — enquanto os mesmos GTINs consultados de um IP
+> residencial no mesmo minuto voltaram íntegros. É o tratamento dado a IP de
+> datacenter, não limite de requisições.
+>
+> No dia seguinte, o mesmo código no container de casa: **`0 registro(s)
+> forjado(s)`** e os dois alertas esperados. A função foi apagada, e com ela o
+> `firebase.json`, o `.firebaserc` e a dependência `firebase-functions`.
+>
+> **Não adianta tentar de novo em outra região ou provedor** sem antes conferir
+> uma rodada de log: `sobraram 0` em todos os GTINs significa que nada mudou.
 
 ```
 functions/
@@ -28,13 +34,12 @@ functions/
 
   server.js             serviço de longa duração   (o container roda este)
   run-once.js           uma rodada e sai           (para agendar por cron)
-  index.js              Cloud Functions            (desativado: IP de datacenter)
+  docker-run.js         sobe o container
   Dockerfile            imagem do serviço
 ```
 
-Os três pontos de entrada compartilham `src/run.js`. O que muda entre eles é
-apenas de onde vem a credencial e quem agenda — a decisão de alerta é a mesma
-linha de código nos três.
+Os dois pontos de entrada compartilham `src/run.js`. O que muda entre eles é
+apenas quem agenda — a decisão de alerta é a mesma linha de código nos dois.
 
 ## Rodando no servidor de casa
 
@@ -196,16 +201,6 @@ pé:
 docker exec geruprecotracking node run-once.js --dry-run
 ```
 
-### 7. Desligar a Cloud Function
-
-Com o servidor de casa no ar, a função na nuvem só gera tráfego inútil contra a
-Nota Paraná. Pause o job em **console.cloud.google.com → Cloud Scheduler**, ou
-remova a função de vez:
-
-```powershell
-npm run -s -- exec firebase functions:delete checkTrackedPrices --region southamerica-east1
-```
-
 ## Comandos de desenvolvimento
 
 ```powershell
@@ -217,62 +212,6 @@ npm --prefix functions run once:dry    # rodada simulada, precisa da credencial
 Os testes rodam sem rede e sem Firestore, então valem em qualquer máquina — é
 onde a regra de "uma vez por queda", a janela de 24 horas e o descarte de
 forjados são verificados.
-
-## Cloud Functions — desativado
-
-Fica documentado porque o código continua no repositório e pode voltar a servir
-se a Nota Paraná deixar de discriminar a origem. **Hoje não use este caminho**:
-ele devolve preço inventado, ver o aviso no topo.
-
-A CLI do Firebase está presa a uma versão no `package.json` da raiz, e não
-instalada globalmente — o repositório é usado em mais de uma máquina, e uma CLI
-por máquina diverge sem avisar. Todos os comandos rodam da **raiz** do
-repositório, que é onde o `firebase.json` mora.
-
-```powershell
-npm install                     # na raiz, instala a CLI
-npm --prefix functions install  # e as dependencias da funcao
-npm test                        # 39 testes, sem rede e sem Firestore
-.\node_modules\.bin\firebase.cmd login    # a conta precisa ser familiagerupo@gmail.com
-npm run deploy                  # firebase deploy --only functions
-npm run logs                    # firebase functions:log --only checkTrackedPrices
-```
-
-`firebase deploy` roda `npm test` antes, pelo `predeploy` do `firebase.json`.
-
-> **A primeira execução da CLI trava sem dizer por quê.** Ela pergunta sobre
-> coleta de dados de uso e fica esperando uma resposta que não vem quando a
-> saída não é um terminal — parece a CLI pendurada na rede. `$env:FIREBASE_CLI_DISABLE_ANALYTICS = "1"`
-> e `--non-interactive` resolvem, e valem para qualquer comando automatizado.
-
-### Blaze é pré-requisito
-
-Cloud Functions não roda no plano Spark, e no Spark a função nem sequer
-consegue fazer requisição de saída — que aqui é o trabalho inteiro. O projeto
-precisa estar no **Blaze**, ligado a uma conta de Cobrança do Cloud.
-
-A conta de Cobrança **não** veio junto na transferência de titularidade do
-projeto para `familiagerupo@gmail.com`: é um recurso separado, com IAM próprio.
-Habilitar o Blaze é, na prática, criar ou vincular uma conta de cobrança dessa
-conta Google ao projeto `gerupreco`.
-
-### Disparar uma rodada fora do horário
-
-Não há endpoint HTTP de propósito: um gatilho aberto na internet dispara push
-para todos os aparelhos, e o app não tem autenticação para proteger isso. Quem
-dispara fora de hora é o próprio Cloud Scheduler.
-
-Pelo console, que é o caminho sem instalar nada:
-**console.cloud.google.com → Cloud Scheduler**, região `southamerica-east1`,
-job `firebase-schedule-checkTrackedPrices-southamerica-east1` → **Forçar
-execução**. O job é criado pelo deploy.
-
-Com o `gcloud` instalado, o mesmo sem sair do terminal:
-
-```powershell
-gcloud scheduler jobs run firebase-schedule-checkTrackedPrices-southamerica-east1 `
-  --location southamerica-east1 --project gerupreco
-```
 
 ## O que ler no log
 

@@ -13,15 +13,15 @@
     <string name="changelog_dismiss">Entendi</string>
 
     <string-array name="changelog_titles">
-        <item>A lista mostra o que já está no carrinho</item>
-        <item>Arraste para a esquerda para tirar do carrinho</item>
-        <item>Filtre a comparação por mercado</item>
+        <item>Novo módulo: Rastreamento de preços</item>
+        <item>A lista marca o que está sendo rastreado</item>
+        <item>Junte produtos num grupo com o mesmo alvo</item>
     </string-array>
 
     <string-array name="changelog_descriptions">
-        <item>O produto que está no carrinho agora aparece com um carrinho no canto do card e a borda destacada, então dá para ver de relance o que já foi escolhido sem abrir o carrinho.</item>
-        <item>Nesses produtos marcados, arrastar a linha para a esquerda tira o item do carrinho, com a quantidade que ele tiver. Nos que não estão no carrinho o card não se mexe, porque não há o que remover. Segurar o produto também passa a oferecer \"Remover do carrinho\".</item>
-        <item>Em \"Comparar carrinho\", o novo ícone de filtro na barra de cima deixa escolher um mercado e, depois, o endereço da loja — ou todos os endereços dele. As duas abas passam a mostrar só os preços daquele mercado, e o botão \"Limpar\" devolve a comparação completa.</item>
+        <item>Escolha um produto, defina o preço que você aceita pagar, e o app avisa quando alguma loja da região chegar nesse valor. A conferência é feita quatro vezes por dia; você não precisa abrir o app. No card do módulo, em \"Rastreamento\", dá para ver tudo o que está sendo vigiado, pausar um item ou parar de vez.</item>
+        <item>Na lista de produtos, quem está sendo rastreado ganha uma marca roxa no canto esquerdo do card — do lado oposto à marca verde do carrinho, então um produto que está nas duas situações mostra as duas.</item>
+        <item>Vários produtos podem dividir o mesmo preço alvo: basta escrever o nome de um grupo ao rastrear, e os já criados aparecem como sugestão, igual às tags. Basta um deles chegar ao alvo para o aviso sair. Você também escolhe se o alerta vai para todos os seus aparelhos ou só para este.</item>
     </string-array>
 
 </resources>

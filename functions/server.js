@@ -4,9 +4,9 @@
  * A rotina de alertas como servico de longa duracao, para rodar num container
  * no servidor de casa.
  *
- * E o terceiro ponto de entrada sobre o mesmo src/run.js. Os outros dois:
- * index.js (Cloud Functions, desativado - ver README) e run-once.js (uma rodada
- * e sai, para quem prefere agendar por cron do sistema).
+ * E um dos dois pontos de entrada sobre o mesmo src/run.js; o outro e o
+ * run-once.js, que roda uma vez e sai, para quem prefere agendar por cron do
+ * sistema.
  *
  * Este existe porque container e cron nao combinam bem: um container que executa
  * e termina, com --restart=unless-stopped, reinicia em laco fechado - e cada

@@ -2,8 +2,8 @@
   "name": "gerupreco-functions",
   "version": "1.0.0",
   "private": true,
-  "description": "Rotina agendada que compara os precos rastreados com o alvo e dispara os alertas",
-  "main": "index.js",
+  "description": "Rotina que compara os precos rastreados com o alvo e dispara os alertas",
+  "main": "server.js",
   "engines": {
     "node": ">=18"
   },
@@ -13,12 +13,9 @@
     "once:dry": "node run-once.js --dry-run",
     "serve": "node server.js",
     "build": "docker build --no-cache -t geruprecotracking .",
-    "docker": "node docker-run.js",
-    "logs": "firebase functions:log --only checkTrackedPrices",
-    "deploy": "firebase deploy --only functions"
+    "docker": "node docker-run.js"
   },
   "dependencies": {
-    "firebase-admin": "^13.0.2",
-    "firebase-functions": "^6.3.0"
+    "firebase-admin": "^13.0.2"
   }
 }

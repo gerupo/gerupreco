@@ -19,11 +19,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-# Os arquivos que a rodada precisa. src/ e o coracao; os tres pontos de entrada
-# vem junto porque sao pequenos e permitem "docker exec ... node run-once.js"
-# para uma rodada avulsa sem levantar outro container.
+# Os arquivos que a rodada precisa. src/ e o coracao; o run-once.js vem junto
+# porque e pequeno e permite "docker exec ... node run-once.js" para uma rodada
+# avulsa sem levantar outro container.
 COPY src/ ./src/
-COPY server.js run-once.js index.js ./
+COPY server.js run-once.js ./
 
 # A credencial NAO entra na imagem de proposito - ela e montada em tempo de
 # execucao, ver o script "docker" do package.json. Um JSON de conta de servico

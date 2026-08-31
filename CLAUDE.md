@@ -56,7 +56,9 @@ Não há lint configurado além do padrão do AGP, nem testes instrumentados rea
 
 ### A rotina do servidor tem comandos próprios
 
-`functions/` é Node, não Gradle, e não passa pelo JDK acima. Ela tem **dois pontos de entrada sobre o mesmo `src/`**: `run-once.js`, que é o que roda de verdade (cron num servidor doméstico), e `index.js`, o esqueleto da Cloud Function — desativado, ver *De onde a rotina sai importa mais que como ela roda*. Detalhes em [functions/README.md](functions/README.md).
+`functions/` é Node, não Gradle, e não passa pelo JDK acima. Ela roda num **servidor doméstico**, por container ou por cron — o porquê está em *De onde a rotina sai importa mais que como ela roda*. Detalhes em [functions/README.md](functions/README.md).
+
+O nome da pasta é herança de quando isto era uma Cloud Function. Renomear quebraria o clone e o container que já estão de pé no servidor, então ficou.
 
 ```powershell
 npm --prefix functions install
@@ -263,11 +265,7 @@ Lista de produtos vigiados com preço-alvo. Quando o preço cai até o alvo, os 
 
 **A parte que roda no aparelho é só o cadastro.** Quem consulta a Nota Paraná, compara com o alvo e dispara a notificação é uma rotina agendada fora do app, às **09:00, 12:00, 15:00 e 18:00**. Por isso não há nenhuma consulta de preço na `TrackingActivity`: o que a tela mostra é exatamente o que a rotina vai usar na próxima rodada.
 
-A rotina vive em **[`functions/`](functions/README.md)**, em Node — o único JavaScript do repositório. Ela é a razão de o `firebase.json` e o `.firebaserc` existirem.
-
-> **A Cloud Function não serve, e o motivo é o IP.** Ver *De onde a rotina sai importa mais que como ela roda*. O código continua no repositório (`index.js`) como esqueleto; quem roda de verdade é o `run-once.js`, chamado por cron num servidor doméstico.
->
-> Se um dia valer reativar: o primeiro deploy falha com `403 ... iam.serviceaccounts.actAs denied on ...-compute@developer.gserviceaccount.com`. Não é permissão do usuário — é a conta de serviço padrão do Compute, que só passa a existir quando a **Compute Engine API** é habilitada, e o IAM ainda leva alguns minutos para propagar. Habilitar, esperar, repetir o deploy.
+A rotina vive em **[`functions/`](functions/README.md)**, em Node — o único JavaScript do repositório.
 
 ### As três coleções
 
@@ -363,20 +361,20 @@ Duas consequências: o alerta fala do **preço de ontem**, não do de hoje; e pr
 
 | origem | resultado |
 | --- | --- |
-| Cloud Function (IP do Google) | 100% forjado em **todas** as rodadas — `sobraram 0` em todo GTIN |
+| Cloud Function, na época (IP do Google) | 100% forjado em **todas** as rodadas — `sobraram 0` em todo GTIN |
 | máquina de casa (IP residencial) | 11 e 43 registros, **zero** forjados, no mesmo minuto |
+| servidor de casa, em 31/08 | `0 registro(s) forjado(s)`, e os dois alertas esperados |
 
 O detalhe que fecha o diagnóstico: **a primeira rodada registrada já veio inteira forjada**, no horário das 18:00 do agendamento original, antes de qualquer volume acumulado. Não foi raspagem detectada por frequência — é o tratamento dado à origem.
 
 Por isso a rotina **roda num servidor doméstico**. Consultar dali é usar a API como o próprio app já faz todo dia na tela do carrinho.
 
-São **três pontos de entrada sobre o mesmo `src/run.js`** — muda só de onde vem a credencial (um JSON de conta de serviço apontado por `GOOGLE_APPLICATION_CREDENTIALS`) e quem agenda:
+São **dois pontos de entrada sobre o mesmo `src/run.js`** — muda só de onde vem a credencial (um JSON de conta de serviço apontado por `GOOGLE_APPLICATION_CREDENTIALS`) e quem agenda:
 
 | entrada | quem agenda | uso |
 | --- | --- | --- |
 | `server.js` | ele mesmo, por dentro | é o que o container roda |
 | `run-once.js` | cron do sistema | uma rodada e sai |
-| `index.js` | Cloud Scheduler | desativado |
 
 **O container roda o `server.js`, e não o `run-once.js`.** Um container que executa e termina, com `--restart=unless-stopped`, reinicia em laço fechado — e cada volta é uma consulta a mais na Nota Paraná. Dentro do container não há cron, então o processo fica de pé e se agenda sozinho (`src/schedule.js`, lógica pura e testada, com o offset fixo de Brasília pelo mesmo motivo do `message.js`: o alpine pode não ter `tzdata`).
 
@@ -389,11 +387,9 @@ Duas consequências que valem preservar:
 - **A saída do `run-once.js` tem código 3 reservado** para "tudo voltou forjado". Sem ele, IP marcado e "nenhum produto atingiu o alvo" terminam os dois em silêncio, e é o cron que precisa perceber a diferença.
 - **Não se resolve isso com proxy residencial ou rotação de IP.** A API está deliberadamente entregando dado falso para datacenter; contornar isso é burlar o controle antiabuso de um serviço público. Rodar da rede de casa não é contorno — é o uso normal.
 
-O `DecoyFilter` e o espaçamento continuam valendo em qualquer origem, porque a marcação por volume também existe e não some quando o IP é bom:
+O `DecoyFilter` e o espaçamento de requisições foram **portados do app** (`functions/src/decoyFilter.js`, `functions/src/requestSpacer.js`) e continuam valendo em qualquer origem, porque a marcação por volume também existe e não some quando o IP é bom. Lá o filtro **registra em log quando descarta**: se o IP for marcado, tudo volta forjado, a limpeza esvazia a resposta e o sintoma é nenhum alerta disparar — silêncio idêntico ao de "nenhum produto atingiu o alvo". É o número que se olha primeiro na linha de resumo da rodada.
 
-O `DecoyFilter` e o espaçamento de requisições foram **portados para a função** (`functions/src/decoyFilter.js`, `functions/src/requestSpacer.js`), e lá o filtro **registra em log quando descarta**: se o IP for marcado, tudo volta forjado, a limpeza esvazia a resposta e o sintoma é nenhum alerta disparar — silêncio idêntico ao de "nenhum produto atingiu o alvo". Sem o log não há como distinguir os dois. É o número que se olha primeiro na linha de resumo da rodada.
-
-Duas defesas a mais do lado do servidor, pelo mesmo motivo: `maxInstances: 1`, porque o espaçador é estado de processo e duas rodadas simultâneas dobrariam a taxa contra a API; e `retryCount: 0`, porque uma rodada que falhou por erro da API voltaria batendo no mesmo IP já sobrecarregado. Nenhum alerta se perde na rodada descartada — `lastNotifiedPrice` só é gravado depois do envio confirmado.
+**Duas rodadas nunca se sobrepõem:** o `server.js` recusa uma nova enquanto a anterior não terminou (`state.running`). O espaçador é estado de processo, não limite global, então duas rodadas ao mesmo tempo dobrariam a taxa contra a API. Nenhum alerta se perde numa rodada recusada — `lastNotifiedPrice` só é gravado depois do envio confirmado, e a próxima rodada reavalia tudo.
 
 ### O que a rotina decide, e o que fica de fora
 
@@ -403,7 +399,7 @@ Duas defesas a mais do lado do servidor, pelo mesmo motivo: `maxInstances: 1`, p
 - **Envio falho não grava `lastNotifiedPrice`.** O alerta continua armado e a próxima rodada tenta de novo; gravar antes perderia o aviso em silêncio.
 - **Alerta particular sem token não vira alerta geral.** Aviso destinado a um aparelho chegando em todos é pior que aviso nenhum, então fica sem enviar — o token reaparece assim que o app for aberto naquele aparelho. É o único caso em que escopo particular não cai no `geral`.
 - **A gravação é campo a campo (`update`), nunca o documento inteiro.** A tela pode ter mudado alvo, escopo ou descrição enquanto a rodada consultava a API, e um `set` com os dados lidos no começo desfaria a edição do usuário.
-- **Não há gatilho HTTP.** Um endpoint aberto na internet dispara push para todos os aparelhos, e o app não tem autenticação para proteger isso. Para rodar fora do horário, mande o próprio Cloud Scheduler executar o job (`gcloud scheduler jobs run`, ver o README).
+- **O gatilho HTTP vem desligado.** O `POST /run` do `server.js` só funciona com `TRACKING_TOKEN` definido: disparar uma rodada envia push para todos os aparelhos, e a porta 3456 pode acabar encaminhada para fora sem ninguém lembrar. Para uma rodada avulsa sem push, `docker exec geruprecotracking node run-once.js --dry-run`.
 
 ### Detalhes de UI que custaram decisão
 

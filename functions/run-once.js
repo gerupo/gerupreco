@@ -10,8 +10,8 @@
  * residencial no mesmo minuto voltou integro. Rodar da rede de casa e usar a API
  * como qualquer usuario do app ja faz.
  *
- * A logica e exatamente a mesma do index.js - os dois compartilham src/run.js.
- * O que muda e so de onde vem a credencial e quem agenda.
+ * A logica e exatamente a mesma do server.js - os dois compartilham
+ * src/run.js. O que muda e so quem agenda.
  *
  * Roda uma vez e sai. Nao ha laco interno de proposito: quem repete e o cron do
  * sistema, que sobrevive a reinicio da maquina e a processo morto, coisas que um
