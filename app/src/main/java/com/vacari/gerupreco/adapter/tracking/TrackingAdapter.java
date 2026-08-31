@@ -17,6 +17,7 @@ import com.vacari.gerupreco.activity.tracking.TrackingActivity;
 import com.vacari.gerupreco.model.firebase.Tracking;
 import com.vacari.gerupreco.model.firebase.TrackingGroup;
 import com.vacari.gerupreco.util.PriceUtil;
+import com.vacari.gerupreco.util.TrackingPlan;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -160,30 +161,24 @@ public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     private void bindProduct(ProductViewHolder holder, Tracking tracking) {
-        TrackingGroup group = tracking.isInGroup()
-                ? groupsById.get(tracking.getGroupId())
-                : null;
+        // Quem resolve "grupo manda em alvo e alcance" e o TrackingPlan, o mesmo
+        // que o dialogo de cadastro usa: enquanto cada tela resolvia por conta
+        // propria, a lista mostrava o alvo do grupo e o dialogo o alvo proprio
+        // obsoleto, sem nada dizendo qual valia.
+        TrackingPlan plan = TrackingPlan.of(tracking, groupsById);
 
         holder.description.setText(tracking.getDescription());
+        holder.target.setText(formatTarget(plan.getTargetPrice()));
+        holder.scope.setText(scopeLabel(plan.isForAllDevices()));
 
-        // Dentro de um grupo quem dita alvo e alcance e o grupo. Um grupo que
-        // sumiu (apagado noutro aparelho) cai no que o proprio produto guarda,
-        // em vez de mostrar linha sem alvo.
-        Double target = group != null ? group.getTargetPrice() : tracking.getTargetPrice();
-        boolean forAll = group != null ? group.isForAllDevices() : tracking.isForAllDevices();
-
-        holder.target.setText(formatTarget(target));
-        holder.scope.setText(scopeLabel(forAll));
-
-        if (group != null) {
+        if (plan.isInGroup()) {
             holder.group.setVisibility(View.VISIBLE);
-            holder.group.setText(mActivity.getString(R.string.tracking_group_of, group.getName()));
+            holder.group.setText(mActivity.getString(R.string.tracking_group_of, plan.getGroupName()));
         } else {
             holder.group.setVisibility(View.GONE);
         }
 
-        boolean paused = !tracking.isActive() || (group != null && !group.isActive());
-        holder.paused.setVisibility(paused ? View.VISIBLE : View.GONE);
+        holder.paused.setVisibility(plan.isActive() ? View.GONE : View.VISIBLE);
 
         holder.tracking = tracking;
         holder.card.setOnClickListener(v -> mActivity.editTracking(tracking));

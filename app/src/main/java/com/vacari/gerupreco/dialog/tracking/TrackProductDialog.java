@@ -24,6 +24,7 @@ import com.vacari.gerupreco.repository.TrackingRepository;
 import com.vacari.gerupreco.util.Callback;
 import com.vacari.gerupreco.util.PriceUtil;
 import com.vacari.gerupreco.util.StringUtil;
+import com.vacari.gerupreco.util.TrackingPlan;
 import com.vacari.gerupreco.util.TrackingScopes;
 
 import java.math.BigDecimal;
@@ -77,9 +78,12 @@ public class TrackProductDialog {
         TextView description = view.findViewById(R.id.track_description);
         description.setText(tracking.getDescription());
 
-        bindGroups();
+        // A ordem importa: bindGroups termina chamando applyGroupState, que le
+        // scopeOptions e escreve nos dois campos. Chamado antes, encontraria o
+        // Spinner sem adapter.
         bindScopes();
         bindTarget();
+        bindGroups();
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(context)
                 .setTitle(isNew ? R.string.tracking_track : R.string.tracking_edit)
@@ -235,6 +239,17 @@ public class TrackProductDialog {
         hint.setText(existing != null
                 ? R.string.tracking_group_owns_target
                 : R.string.tracking_group_will_be_created);
+
+        // Escolher um grupo troca o que os campos mostram, para eles nunca
+        // exibirem um valor que nao esta em vigor. Sair do grupo mantem o que
+        // ficou visivel: o alvo herdado e o que a pessoa acabou de ver valendo,
+        // e voltar ao proprio obsoleto seria a mesma armadilha ao contrario.
+        if (existing != null) {
+            setTargetField(existing.getTargetPrice());
+            Spinner scope = view.findViewById(R.id.track_scope);
+            scope.setSelection(TrackingScopes.indexOf(scopeOptions,
+                    existing.getScope(), existing.getDeviceId()));
+        }
     }
 
     private void bindScopes() {
@@ -244,19 +259,31 @@ public class TrackProductDialog {
                 android.R.layout.simple_spinner_item, scopeOptions);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
+        TrackingPlan plan = TrackingPlan.of(tracking, TrackingPlan.byId(groups));
+
         Spinner spinner = view.findViewById(R.id.track_scope);
         spinner.setAdapter(adapter);
         spinner.setSelection(TrackingScopes.indexOf(scopeOptions,
-                tracking.getScope(), tracking.getDeviceId()));
+                plan.getScope(), plan.getDeviceId()));
     }
 
+    /**
+     * Mostra o alvo que de fato vale, e nao o campo proprio do produto.
+     *
+     * Enquanto mostrava o proprio, um produto dentro de grupo exibia aqui um
+     * numero obsoleto - o alvo que ele tinha antes de entrar no grupo - num
+     * campo desabilitado, ao lado de um aviso dizendo que o alvo vem do grupo.
+     * A lista mostrava R$ 5,90 e este dialogo R$ 6,00 para o mesmo produto, sem
+     * nada indicando qual o servidor usaria.
+     */
     private void bindTarget() {
-        if (tracking.getTargetPrice() == null) {
-            return;
-        }
+        setTargetField(TrackingPlan.of(tracking, TrackingPlan.byId(groups)).getTargetPrice());
+    }
 
+    private void setTargetField(Double value) {
         EditText target = view.findViewById(R.id.track_target);
-        target.setText(BigDecimal.valueOf(tracking.getTargetPrice())
+
+        target.setText(value == null ? "" : BigDecimal.valueOf(value)
                 .setScale(2, java.math.RoundingMode.HALF_UP).toPlainString());
     }
 

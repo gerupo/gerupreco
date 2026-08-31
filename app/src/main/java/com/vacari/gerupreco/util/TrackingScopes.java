@@ -7,7 +7,6 @@ import com.vacari.gerupreco.model.firebase.Tracking;
 import com.vacari.gerupreco.model.firebase.TrackingGroup;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -135,23 +134,14 @@ public class TrackingScopes {
      */
     public static List<Tracking> visibleTrackings(Context context, List<Tracking> trackings,
                                                   List<TrackingGroup> allGroups) {
-        Map<String, TrackingGroup> groupsById = new HashMap<>();
-        for (TrackingGroup group : allGroups) {
-            groupsById.put(group.getId(), group);
-        }
+        Map<String, TrackingGroup> groupsById = TrackingPlan.byId(allGroups);
 
         List<Tracking> visible = new ArrayList<>();
 
         for (Tracking tracking : trackings) {
-            TrackingGroup group = tracking.isInGroup()
-                    ? groupsById.get(tracking.getGroupId())
-                    : null;
+            TrackingPlan plan = TrackingPlan.of(tracking, groupsById);
 
-            boolean ok = group != null
-                    ? isVisible(context, group.getScope(), group.getDeviceId())
-                    : isVisible(context, tracking.getScope(), tracking.getDeviceId());
-
-            if (ok) {
+            if (isVisible(context, plan.getScope(), plan.getDeviceId())) {
                 visible.add(tracking);
             }
         }
