@@ -3,7 +3,7 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
-def appVersionCode = 19
+def appVersionCode = 20
 
 android {
     namespace = 'com.vacari.gerupreco'
@@ -28,7 +28,7 @@ android {
         minSdk = 30
         targetSdk = 36
         versionCode = appVersionCode
-        versionName = "3.3.0"
+        versionName = "3.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
