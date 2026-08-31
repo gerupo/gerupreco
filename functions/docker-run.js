@@ -83,6 +83,16 @@ function main() {
     "-v", `${credentials}:${MOUNT}:ro`,
   ];
 
+  // O container roda com o uid de quem chamou, para conseguir ler a credencial
+  // montada. Ela e chmod 600 e pertence a quem a gerou; a imagem roda como o
+  // usuario "node" (uid 1000). Quando os dois nao coincidem, o open falha com
+  // "EACCES: permission denied" apontando o arquivo - e a mensagem nao diz que o
+  // problema e divergencia de uid, o que manda direto para a tentacao errada, a
+  // de afrouxar o 600.
+  if (typeof process.getuid === "function") {
+    args.push("--user", `${process.getuid()}:${process.getgid()}`);
+  }
+
   // Repassado so quando definido: sem ele o gatilho manual fica desligado, que
   // e o padrao desejado.
   if (process.env.TRACKING_TOKEN) {

@@ -141,6 +141,12 @@ inúteis. Com a variável vazia, o docker reclamava do formato do `-v`
 apontando para um arquivo inexistente, o docker **cria um diretório vazio ali** —
 o container sobe, e a falha só aparece bem depois, dizendo outra coisa.
 
+O container sobe com **`--user` no uid de quem chamou**. A credencial montada é
+`chmod 600` e pertence ao dono no host, enquanto a imagem roda como `node`
+(uid 1000): quando os dois não coincidem, a leitura falha com
+`EACCES: permission denied` apontando o arquivo — mensagem que não menciona uid
+nenhum, e que empurra para a solução errada, a de afrouxar o `600`.
+
 **A chave não entra na imagem de propósito.** Copiada com `COPY`, ela ficaria
 numa camada legível por qualquer um que tenha a imagem, e ela dá escrita no
 Firestore e permissão de enviar push. Se ainda assim você preferir embutir, é

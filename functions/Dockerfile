@@ -32,7 +32,12 @@ COPY server.js run-once.js index.js ./
 ENV GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/service-account.json
 
 # Nao roda como root: o processo so precisa ler o proprio codigo e a credencial
-# montada. A imagem node ja traz o usuario "node".
+# montada. A imagem node ja traz o usuario "node" (uid 1000).
+#
+# Este e so o padrao de quem subir a imagem na mao. O docker-run.js passa
+# --user com o uid de quem chamou, porque a credencial montada e chmod 600 e
+# pertence ao dono do host - se os uids nao coincidirem, a leitura falha com
+# EACCES apontando o arquivo, sem dizer que o problema e o uid.
 USER node
 
 EXPOSE 3456
