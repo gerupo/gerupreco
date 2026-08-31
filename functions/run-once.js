@@ -18,20 +18,68 @@
  * setInterval dentro do Node nao sobrevive.
  */
 
+const fs = require("node:fs");
+
 const admin = require("firebase-admin");
 
 const { run } = require("./src/run");
 
 const DRY_RUN = process.argv.includes("--dry-run");
 
+/**
+ * O log do container mostra so a saida do processo 1. Uma rodada forcada por
+ * "docker exec" e outro processo, entao ela sumia do "docker logs" - e quem
+ * fosse conferir depois via so as rodadas agendadas, com a forcada faltando
+ * bem no meio, como se nao tivesse acontecido.
+ *
+ * Escrever tambem em /proc/1/fd/1 devolve a rodada ao log do container.
+ *
+ * O teste do /.dockerenv nao e zelo excessivo: fora de container o processo 1 e
+ * o init do sistema, e despejar log ali seria escrever no console da maquina do
+ * usuario. Sem o arquivo, ou sem permissao no descritor, a funcao desiste em
+ * silencio e sobra a saida normal, que ja e o que o cron registra.
+ */
+function containerLog() {
+  if (process.pid === 1 || !fs.existsSync("/.dockerenv")) {
+    return null;
+  }
+
+  try {
+    return fs.createWriteStream("/proc/1/fd/1", { flags: "a" });
+  } catch (error) {
+    return null;
+  }
+}
+
+const mirror = containerLog();
+
 function stamp() {
   return new Date().toISOString();
 }
 
+function write(level, line) {
+  const text = `${stamp()} ${level} ${line}`;
+
+  if (level === "ERROR") {
+    console.error(text);
+  } else if (level === "WARN") {
+    console.warn(text);
+  } else {
+    console.log(text);
+  }
+
+  if (mirror) {
+    // Marcado para a rodada forcada nao se confundir com as agendadas na
+    // leitura do "docker logs".
+    mirror.write(`${text}   [forcada]
+`);
+  }
+}
+
 const logger = {
-  info: (line) => console.log(`${stamp()} INFO  ${line}`),
-  warn: (line) => console.warn(`${stamp()} WARN  ${line}`),
-  error: (line) => console.error(`${stamp()} ERROR ${line}`),
+  info: (line) => write("INFO ", line),
+  warn: (line) => write("WARN ", line),
+  error: (line) => write("ERROR", line),
 };
 
 /**

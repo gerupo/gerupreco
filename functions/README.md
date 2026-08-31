@@ -201,6 +201,17 @@ pé:
 docker exec geruprecotracking node run-once.js --dry-run
 ```
 
+Ela **aparece no `docker logs`**, com as linhas marcadas `[forcada]`. Não é de
+graça: `docker logs` mostra só a saída do processo 1, e um `exec` é outro
+processo — o `run-once.js` espelha a saída em `/proc/1/fd/1` para a rodada não
+sumir do log do container.
+
+Duas diferenças em relação ao `POST /run`, que roda dentro do próprio serviço:
+o `exec` **não atualiza o `/health`**, e **não respeita o guarda de rodada
+simultânea** (`state.running` vive no processo do serviço). Forçar uma rodada
+exatamente em cima de uma agendada faria as duas baterem na API ao mesmo tempo —
+janela estreita, mas real.
+
 ## Comandos de desenvolvimento
 
 ```powershell

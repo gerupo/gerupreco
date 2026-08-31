@@ -392,7 +392,11 @@ Duas consequências que valem preservar:
 
 O `DecoyFilter` e o espaçamento de requisições foram **portados do app** (`functions/src/decoyFilter.js`, `functions/src/requestSpacer.js`) e continuam valendo em qualquer origem, porque a marcação por volume também existe e não some quando o IP é bom. Lá o filtro **registra em log quando descarta**: se o IP for marcado, tudo volta forjado, a limpeza esvazia a resposta e o sintoma é nenhum alerta disparar — silêncio idêntico ao de "nenhum produto atingiu o alvo". É o número que se olha primeiro na linha de resumo da rodada.
 
-**Duas rodadas nunca se sobrepõem:** o `server.js` recusa uma nova enquanto a anterior não terminou (`state.running`). O espaçador é estado de processo, não limite global, então duas rodadas ao mesmo tempo dobrariam a taxa contra a API. Nenhum alerta se perde numa rodada recusada — `lastNotifiedPrice` só é gravado depois do envio confirmado, e a próxima rodada reavalia tudo.
+**O `server.js` recusa uma rodada enquanto a anterior não terminou** (`state.running`). O espaçador é estado de processo, não limite global, então duas rodadas ao mesmo tempo dobrariam a taxa contra a API. Nenhum alerta se perde numa rodada recusada — `lastNotifiedPrice` só é gravado depois do envio confirmado, e a próxima rodada reavalia tudo.
+
+> **Esse guarda não alcança o `docker exec ... run-once.js`**, que é outro processo e não enxerga o `state.running` do serviço. Forçar uma rodada exatamente em cima de uma agendada faria as duas consultarem a API ao mesmo tempo. A janela é estreita e o remédio seria um lock em arquivo; por ora, o caminho sem esse risco é o `POST /run`, que roda dentro do próprio serviço.
+
+**A rodada forçada aparece no `docker logs`.** O log do container mostra só a saída do processo 1, e um `docker exec` é outro processo — a rodada sumia do log, e quem fosse conferir depois via as agendadas com um buraco no meio. O `run-once.js` espelha a saída em `/proc/1/fd/1`, marcando as linhas com `[forcada]`. O espelho é guardado por `/.dockerenv` e por `pid !== 1`: fora de container o processo 1 é o init do sistema, e escrever ali seria despejar log no console da máquina.
 
 ### O que a rotina decide, e o que fica de fora
 
