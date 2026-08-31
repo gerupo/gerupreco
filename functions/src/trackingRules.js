@@ -91,18 +91,41 @@ function lowestRecentOffer(offers, now) {
 }
 
 /**
- * A regra inteira de "uma vez por queda".
+ * Quanto tempo o mesmo aviso espera antes de se repetir.
  *
- * lastNotifiedPrice nulo significa armado. Notifica quando o menor preco chega
- * ao alvo e ou o campo esta nulo, ou o preco caiu ainda mais que o ja avisado;
- * e volta o campo a nulo assim que o preco sobe acima do alvo, rearmando para a
- * proxima queda. Sem isso, quatro rodadas por dia repetiriam o mesmo aviso
- * enquanto a promocao durasse, e o usuario desligaria as notificacoes do app.
+ * Sao 23 horas, e nao 24, de proposito. As rodadas saem em horarios fixos, e com
+ * o corte exato em 24h a rodada do mesmo horario no dia seguinte chega alguns
+ * milissegundos cedo - as vezes antes, as vezes depois, conforme o atraso do
+ * agendamento. O aviso passaria a pular um dia sim, outro nao, sem nada
+ * explicando. Com a folga de uma hora ele cai sempre na mesma rodada do dia
+ * seguinte.
+ */
+const REMINDER_AFTER_MS = 23 * 60 * 60 * 1000;
+
+/**
+ * A regra inteira de quando o aviso sai.
+ *
+ * lastNotifiedPrice nulo significa armado. O aviso sai quando o menor preco
+ * chega ao alvo e uma destas tres vale:
+ *
+ * - o campo esta nulo (primeira queda depois de armado);
+ * - o preco caiu ainda mais que o ja avisado (achado novo, sai na hora);
+ * - passaram-se 24 horas desde o ultimo aviso (lembrete diario).
+ *
+ * O campo volta a nulo assim que o preco sobe acima do alvo, rearmando para a
+ * proxima queda.
+ *
+ * O lembrete existe porque so avisar uma vez por queda deixava o produto em
+ * silencio indefinido: com o preco parado abaixo do alvo, o primeiro aviso era
+ * o unico, e semanas depois ninguem lembrava que aquilo seguia valendo. Repetir
+ * a cada rodada seria o extremo oposto - quatro por dia durante a promocao
+ * inteira -, e o desfecho previsivel e o usuario desligar as notificacoes do
+ * app. Quem nao quer o lembrete diario para de rastrear o produto.
  *
  * Rodada sem oferta na janela nao mexe no estado: silencio nao e alta de preco,
  * e rearmar ali faria o mesmo aviso voltar assim que a proxima nota aparecesse.
  */
-function decide(plan, lastNotifiedPrice, lowest) {
+function decide(plan, tracking, lowest, now = Date.now()) {
   const target = priceUtil.cents(plan.targetPrice);
 
   if (target === null || !plan.active) {
@@ -114,7 +137,7 @@ function decide(plan, lastNotifiedPrice, lowest) {
   }
 
   const price = priceUtil.cents(lowest.price);
-  const notified = priceUtil.cents(lastNotifiedPrice);
+  const notified = priceUtil.cents(tracking.lastNotifiedPrice);
 
   if (price > target) {
     // Rearma. So grava se havia algo armado, para nao reescrever documento sem
@@ -126,10 +149,22 @@ function decide(plan, lastNotifiedPrice, lowest) {
     return { notify: true, changed: true, lastNotifiedPrice: lowest.price };
   }
 
+  // Sem data do ultimo aviso o lembrete sai: e cadastro antigo, de antes deste
+  // campo entrar em decisao, e calar para sempre seria pior que avisar uma vez
+  // a mais.
+  const since = tracking.lastNotifiedAt === null || tracking.lastNotifiedAt === undefined
+    ? Infinity
+    : now - tracking.lastNotifiedAt;
+
+  if (since >= REMINDER_AFTER_MS) {
+    return { notify: true, changed: true, lastNotifiedPrice: lowest.price };
+  }
+
   return { notify: false, changed: false };
 }
 
 module.exports = {
+  REMINDER_AFTER_MS,
   SCOPE_ALL,
   SCOPE_DEVICE,
   WINDOW_MS,

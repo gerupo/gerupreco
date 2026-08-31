@@ -16,6 +16,15 @@ function offer(price, hoursAgo) {
   };
 }
 
+/** Rastreamento nunca avisado: o campo nulo significa armado. */
+function armado() {
+  return { lastNotifiedPrice: null, lastNotifiedAt: null };
+}
+
+function avisado(price, at) {
+  return { lastNotifiedPrice: price, lastNotifiedAt: at };
+}
+
 function groups(entries) {
   return new Map(entries.map((group) => [group.id, group]));
 }
@@ -77,34 +86,34 @@ test("nenhuma oferta na janela volta nulo", () => {
 
 test("armado: primeira queda ate o alvo notifica", () => {
   const plan = { active: true, targetPrice: 10 };
-  const decision = rules.decide(plan, null, { price: 9.5 });
+  const decision = rules.decide(plan, armado(), { price: 9.5 }, NOW);
 
   assert.strictEqual(decision.notify, true);
   assert.strictEqual(decision.lastNotifiedPrice, 9.5);
 });
 
 test("preco exatamente no alvo notifica", () => {
-  const decision = rules.decide({ active: true, targetPrice: 10 }, null, { price: 10 });
+  const decision = rules.decide({ active: true, targetPrice: 10 }, armado(), { price: 10 }, NOW);
 
   assert.strictEqual(decision.notify, true);
 });
 
 test("mesma promocao nao repete o aviso a cada rodada", () => {
-  const decision = rules.decide({ active: true, targetPrice: 10 }, 9.5, { price: 9.5 });
+  const decision = rules.decide({ active: true, targetPrice: 10 }, avisado(9.5, NOW - HOUR), { price: 9.5 }, NOW);
 
   assert.strictEqual(decision.notify, false);
   assert.strictEqual(decision.changed, false);
 });
 
 test("queda alem da ja avisada notifica de novo", () => {
-  const decision = rules.decide({ active: true, targetPrice: 10 }, 9.5, { price: 8.9 });
+  const decision = rules.decide({ active: true, targetPrice: 10 }, avisado(9.5, NOW - HOUR), { price: 8.9 }, NOW);
 
   assert.strictEqual(decision.notify, true);
   assert.strictEqual(decision.lastNotifiedPrice, 8.9);
 });
 
 test("preco acima do alvo rearma para a proxima queda", () => {
-  const decision = rules.decide({ active: true, targetPrice: 10 }, 9.5, { price: 12 });
+  const decision = rules.decide({ active: true, targetPrice: 10 }, avisado(9.5, NOW - HOUR), { price: 12 }, NOW);
 
   assert.strictEqual(decision.notify, false);
   assert.strictEqual(decision.changed, true);
@@ -112,7 +121,7 @@ test("preco acima do alvo rearma para a proxima queda", () => {
 });
 
 test("caro ha dias nao reescreve o documento a cada rodada", () => {
-  const decision = rules.decide({ active: true, targetPrice: 10 }, null, { price: 12 });
+  const decision = rules.decide({ active: true, targetPrice: 10 }, armado(), { price: 12 }, NOW);
 
   assert.strictEqual(decision.changed, false);
 });
@@ -120,14 +129,75 @@ test("caro ha dias nao reescreve o documento a cada rodada", () => {
 test("rodada sem oferta nao mexe no estado", () => {
   // Silencio nao e alta de preco: rearmar aqui faria o mesmo aviso voltar
   // assim que a proxima nota aparecesse.
-  const decision = rules.decide({ active: true, targetPrice: 10 }, 9.5, null);
+  const decision = rules.decide({ active: true, targetPrice: 10 }, avisado(9.5, NOW - HOUR), null, NOW);
 
   assert.strictEqual(decision.notify, false);
   assert.strictEqual(decision.changed, false);
 });
 
 test("sem alvo nao ha o que comparar", () => {
-  const decision = rules.decide({ active: true, targetPrice: null }, null, { price: 1 });
+  const decision = rules.decide({ active: true, targetPrice: null }, armado(), { price: 1 }, NOW);
 
   assert.strictEqual(decision.notify, false);
+});
+
+test("passadas 24 horas o mesmo aviso se repete", () => {
+  // Preco parado abaixo do alvo: sem o lembrete o produto ficava em silencio
+  // indefinido depois do primeiro aviso.
+  const decision = rules.decide(
+    { active: true, targetPrice: 10 },
+    avisado(9.5, NOW - 24 * HOUR),
+    { price: 9.5 },
+    NOW
+  );
+
+  assert.strictEqual(decision.notify, true);
+  assert.strictEqual(decision.lastNotifiedPrice, 9.5);
+});
+
+test("antes do prazo o lembrete nao sai", () => {
+  const decision = rules.decide(
+    { active: true, targetPrice: 10 },
+    avisado(9.5, NOW - 12 * HOUR),
+    { price: 9.5 },
+    NOW
+  );
+
+  assert.strictEqual(decision.notify, false);
+});
+
+test("o corte tem folga para cair sempre na mesma rodada do dia seguinte", () => {
+  // Com corte exato em 24h, a rodada do mesmo horario chegaria milissegundos
+  // cedo e o aviso pularia um dia sim, outro nao.
+  const umDiaDepoisComJitter = NOW - (24 * HOUR - 5);
+
+  assert.strictEqual(
+    rules.decide({ active: true, targetPrice: 10 },
+      avisado(9.5, umDiaDepoisComJitter), { price: 9.5 }, NOW).notify,
+    true
+  );
+});
+
+test("cadastro antigo sem data de aviso recebe o lembrete", () => {
+  // Calar para sempre seria pior que avisar uma vez a mais.
+  const decision = rules.decide(
+    { active: true, targetPrice: 10 },
+    { lastNotifiedPrice: 9.5 },
+    { price: 9.5 },
+    NOW
+  );
+
+  assert.strictEqual(decision.notify, true);
+});
+
+test("preco acima do alvo rearma mesmo com o prazo vencido", () => {
+  const decision = rules.decide(
+    { active: true, targetPrice: 10 },
+    avisado(9.5, NOW - 48 * HOUR),
+    { price: 12 },
+    NOW
+  );
+
+  assert.strictEqual(decision.notify, false);
+  assert.strictEqual(decision.lastNotifiedPrice, null);
 });

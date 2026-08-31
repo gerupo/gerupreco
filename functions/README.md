@@ -22,7 +22,7 @@ Brasília).
 ```
 functions/
   src/run.js            uma rodada: lê, consulta, decide, notifica, grava
-  src/trackingRules.js  a decisão (janela de 24h, alvo, "uma vez por queda")
+  src/trackingRules.js  a decisão (janela de 24h, alvo, repetição do aviso)
   src/notaParana.js     a consulta por GTIN
   src/requestSpacer.js  400ms entre consultas
   src/decoyFilter.js    descarte dos registros forjados

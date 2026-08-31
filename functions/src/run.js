@@ -78,7 +78,7 @@ async function run({ db, messaging, logger, now = Date.now(), search = notaParan
     }
 
     const lowest = rules.lowestRecentOffer(offersByBarCode.get(tracking.barCode), now);
-    const decision = rules.decide(plan, tracking.lastNotifiedPrice, lowest);
+    const decision = rules.decide(plan, tracking, lowest, now);
     const update = { lastCheckedAt: now };
 
     if (decision.notify) {

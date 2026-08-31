@@ -309,11 +309,29 @@ Antes existia um FAB no rodapé que criava o grupo vazio. Ele pedia que o usuár
 - **A sugestão abre em dois gatilhos — clique e foco** (`setOnClickListener` + `setOnFocusChangeListener` com `post`). O primeiro toque num campo sem foco só pede o foco: o clique não chega, e a lista não abria justamente na primeira vez, que é quando o usuário mais precisa ver o que já existe. O `post` é necessário porque no instante do foco a janela do popup ainda não tem onde se ancorar.
 - **`TrackingGroupDialog` só edita, nunca cria.** Sem o FAB, nenhum grupo sem id chega nele — por isso o título é fixo, o botão de remover está sempre presente e a gravação é sempre `update`. Manter os ramos de "novo" faria um leitor supor que ainda se cria grupo por ali.
 
-### `lastNotifiedPrice` é a regra inteira de "uma vez por queda"
+### Quando o aviso sai
 
-Nulo significa **armado**. O servidor notifica quando o menor preço fica abaixo do alvo e ou o campo está nulo, ou o preço caiu ainda mais que o já avisado; e volta o campo a nulo assim que o preço sobe acima do alvo, rearmando para a próxima queda. Sem isso, quatro rodadas por dia repetiriam o mesmo aviso enquanto a promoção durasse, e o usuário desligaria as notificações do app.
+Com o menor preço da janela no alvo ou abaixo dele, o aviso sai se **uma** destas três valer:
 
-O app zera esse campo em dois pontos, e os dois importam: ao **mudar o alvo** (o preço já avisado valia para o alvo anterior) e ao **retomar um rastreamento pausado** (enquanto pausado o preço pode ter subido e caído de novo).
+| condição | campo | o que representa |
+| --- | --- | --- |
+| `lastNotifiedPrice` nulo | — | **armado**: primeira queda desde o último rearme |
+| preço menor que o já avisado | `lastNotifiedPrice` | achado novo, sai na hora |
+| 24 h desde o último aviso | `lastNotifiedAt` | lembrete diário |
+
+E o campo volta a nulo — rearmando — assim que o preço **sobe acima do alvo**.
+
+**O lembrete diário existe porque só avisar por queda deixava o produto em silêncio indefinido.** Com o preço parado abaixo do alvo, o primeiro aviso era o único: semanas depois ninguém lembrava que aquilo seguia valendo. O extremo oposto — repetir a cada rodada — renderia quatro por dia durante a promoção inteira, e o desfecho previsível é o usuário desligar as notificações do app. Quem não quer o lembrete para de rastrear o produto, que é uma ação explícita.
+
+**O corte é de 23 horas, não 24, e isso é deliberado.** As rodadas saem em horários fixos; com o corte exato, a rodada do mesmo horário no dia seguinte chega alguns milissegundos cedo — às vezes antes, às vezes depois, conforme o atraso do agendamento — e o aviso passaria a pular um dia sim, outro não, sem nada explicando. Com a folga ele cai sempre na mesma rodada do dia seguinte. Está em `REMINDER_AFTER_MS`, coberto por teste.
+
+**Rodada sem oferta na janela não mexe no estado.** Silêncio não é alta de preço, e rearmar ali faria o mesmo aviso voltar assim que a próxima nota aparecesse.
+
+**Cadastro sem `lastNotifiedAt` recebe o lembrete** (é anterior a este campo entrar em decisão). Calar para sempre seria pior que avisar uma vez a mais.
+
+O app zera `lastNotifiedPrice` em dois pontos, e os dois importam: ao **mudar o alvo** pelo diálogo do produto (o preço já avisado valia para o alvo anterior) e ao **retomar um rastreamento pausado** (enquanto pausado o preço pode ter subido e caído de novo).
+
+> **Mudar o alvo pelo diálogo do *grupo* não rearma os membros.** O `TrackingGroupDialog` grava o grupo e pronto, enquanto o `TrackProductDialog` rearma sempre. É uma inconsistência conhecida, da mesma família da do alvo efetivo: o grupo dita o alvo, mas não carrega as consequências de mudá-lo.
 
 ### Escopo: geral e particular
 
