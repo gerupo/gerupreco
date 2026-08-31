@@ -60,8 +60,11 @@ function credentialsPath() {
     fail(
       `Isto nao e um arquivo:\n  ${resolved}\n\n` +
         "Quase sempre e um diretorio vazio que o proprio docker criou numa\n" +
-        "tentativa anterior, quando o caminho apontava para algo inexistente.\n" +
-        "Apague o diretorio e ponha a chave no lugar."
+        "tentativa anterior, quando o caminho apontava para algo inexistente.\n\n" +
+        `  ls -la ${resolved}\n` +
+        `  rmdir ${resolved}\n\n` +
+        "Se nao estiver vazio, veja o que ha dentro antes de remover - pode ser\n" +
+        "a propria chave, que ai e so mover para o lugar certo."
     );
   }
 
