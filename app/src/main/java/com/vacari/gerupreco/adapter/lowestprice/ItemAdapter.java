@@ -38,6 +38,12 @@ public class ItemAdapter extends RecyclerView.Adapter {
      */
     private final Set<String> cartBarCodes = new HashSet<>();
 
+    /**
+     * Codigos de barras com preco rastreado. Separado do carrinho de proposito:
+     * os dois estados sao independentes, e um produto pode estar nos dois.
+     */
+    private final Set<String> trackedBarCodes = new HashSet<>();
+
     public ItemAdapter(LowestPriceProduct mActivity) {
         this.itemList = new ArrayList<>();
         this.allItemList = new ArrayList<>();
@@ -64,6 +70,23 @@ public class ItemAdapter extends RecyclerView.Adapter {
 
     private boolean isInCart(Item item) {
         return StringUtil.isNotEmpty(item.getBarCode()) && cartBarCodes.contains(item.getBarCode());
+    }
+
+    /**
+     * Marca quais produtos tem preco rastreado. Vem da Activity pelo mesmo
+     * motivo do carrinho: consultar dentro do onBindViewHolder seria uma busca
+     * por linha rolada - e aqui seria pior, porque a lista de rastreamentos
+     * vive no Firestore.
+     */
+    public void setTrackedBarCodes(Set<String> barCodes) {
+        trackedBarCodes.clear();
+        trackedBarCodes.addAll(barCodes);
+        notifyDataSetChanged();
+    }
+
+    private boolean isTracked(Item item) {
+        return StringUtil.isNotEmpty(item.getBarCode())
+                && trackedBarCodes.contains(item.getBarCode());
     }
 
     public void refresh(List<Item> itemList) {
@@ -96,29 +119,42 @@ public class ItemAdapter extends RecyclerView.Adapter {
         holder.unitMeasure.setText(item.getUnitMeasure());
 
         bindTags(holder, item);
-        bindCartMark(holder, item);
+        bindCornerMarks(holder, item);
     }
 
     /**
-     * A marca de canto cobre o cabecalho, entao o chip de tamanho precisa
-     * recuar enquanto ela estiver visivel. A borda do card muda junto: de longe
-     * e ela que faz o produto no carrinho saltar na lista.
+     * As marcas de canto cobrem o cabecalho, entao ele recua de cada lado que
+     * estiver marcado: a direita para o chip de tamanho nao ficar embaixo da
+     * marca do carrinho, a esquerda para a descricao nao ficar embaixo da marca
+     * de rastreado.
+     *
+     * Os dois estados sao independentes e podem valer ao mesmo tempo - o
+     * produto no carrinho e rastreado mostra as duas marcas, uma em cada canto.
+     *
+     * A borda do card continua respondendo so ao carrinho. E ela que faz o
+     * produto no carrinho saltar quando a lista e percorrida de relance; se
+     * mudasse tambem por rastreamento, deixaria de significar "no carrinho" e
+     * viraria "tem alguma marca", que nao ajuda a decidir nada no mercado.
      */
-    private void bindCartMark(ViewHolder holder, Item item) {
+    private void bindCornerMarks(ViewHolder holder, Item item) {
         boolean inCart = isInCart(item);
+        boolean tracked = isTracked(item);
 
         holder.inCartMark.setVisibility(inCart ? View.VISIBLE : View.GONE);
+        holder.trackedMark.setVisibility(tracked ? View.VISIBLE : View.GONE);
 
         holder.card.setStrokeColor(ContextCompat.getColor(mActivity,
                 inCart ? R.color.primary_container : R.color.outline_variant));
 
-        int inset = inCart
-                ? mActivity.getResources().getDimensionPixelSize(R.dimen.cart_mark_inset)
-                : 0;
+        int mark = mActivity.getResources().getDimensionPixelSize(R.dimen.corner_mark_inset);
+        int endInset = inCart ? mark : 0;
+        int startInset = tracked ? mark : 0;
+
         ViewGroup.MarginLayoutParams params =
                 (ViewGroup.MarginLayoutParams) holder.header.getLayoutParams();
-        if (params.getMarginEnd() != inset) {
-            params.setMarginEnd(inset);
+        if (params.getMarginEnd() != endInset || params.getMarginStart() != startInset) {
+            params.setMarginEnd(endInset);
+            params.setMarginStart(startInset);
             holder.header.setLayoutParams(params);
         }
     }
@@ -217,6 +253,7 @@ public class ItemAdapter extends RecyclerView.Adapter {
         final MaterialCardView card;
         final View header;
         final ImageView inCartMark;
+        final ImageView trackedMark;
         final TextView description;
         final TextView size;
         final TextView unitMeasure;
@@ -229,6 +266,7 @@ public class ItemAdapter extends RecyclerView.Adapter {
             card = view.findViewById(R.id.item_card);
             header = view.findViewById(R.id.item_header);
             inCartMark = view.findViewById(R.id.item_in_cart);
+            trackedMark = view.findViewById(R.id.item_tracked);
             description = view.findViewById(R.id.item_description);
             size = view.findViewById(R.id.item_size);
             unitMeasure = view.findViewById(R.id.item_unitMeasure);
@@ -269,11 +307,11 @@ public class ItemAdapter extends RecyclerView.Adapter {
                 return true;
             });
 
-//            MenuItem alert = (MenuItem) menu.findItem(R.id.action_alert);
-//            alert.setOnMenuItemClickListener(menuItem -> {
-//                mActivity.createNotification(position);
-//                return true;
-//            });
+            MenuItem track = menu.findItem(R.id.action_track);
+            track.setOnMenuItemClickListener(menuItem -> {
+                mActivity.trackProduct(position);
+                return true;
+            });
 
             MenuItem edit = (MenuItem) menu.findItem(R.id.action_edit);
             edit.setOnMenuItemClickListener(menuItem -> {

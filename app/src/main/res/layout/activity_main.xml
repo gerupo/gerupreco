@@ -26,11 +26,18 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
+                android:layout_marginBottom="@dimen/space_margin_x"
                 android:gravity="center"
                 android:text="@string/module_subtitle"
                 android:textAppearance="@style/TextAppearance.GeruPreco.BodyMd"
                 android:textColor="@color/on_surface_variant" />
+
+            <!--
+                Com o terceiro modulo o card deixou de ser o bloco alto com o
+                glifo empilhado: tres deles nao cabiam na tela, e a escolha de
+                modulo e a unica coisa que esta tela faz - rolar para ver uma
+                das opcoes seria esconder justamente o que ela oferece.
+            -->
 
             <!-- GeruPreço -->
             <com.google.android.material.card.MaterialCardView
@@ -43,39 +50,116 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical"
-                    android:padding="32dp">
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/space_container_padding">
 
                     <ImageView
-                        android:layout_width="@dimen/module_icon_size"
-                        android:layout_height="@dimen/module_icon_size"
-                        android:layout_marginBottom="@dimen/space_margin_x"
+                        android:layout_width="@dimen/module_icon_size_compact"
+                        android:layout_height="@dimen/module_icon_size_compact"
                         android:background="@drawable/bg_module_icon"
                         android:contentDescription="@string/module_gerupreco"
                         android:elevation="10dp"
                         android:outlineAmbientShadowColor="@color/primary_container"
                         android:outlineProvider="background"
                         android:outlineSpotShadowColor="@color/primary_container"
-                        android:padding="20dp"
+                        android:padding="14dp"
                         android:src="@drawable/ic_payments_24"
                         app:tint="@color/on_primary_container" />
 
-                    <TextView
-                        android:layout_width="match_parent"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/space_base"
-                        android:gravity="center"
-                        android:text="@string/module_gerupreco"
-                        android:textAppearance="@style/TextAppearance.GeruPreco.HeadlineLg" />
+                        android:layout_marginStart="@dimen/space_gutter"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/module_gerupreco"
+                            android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/module_gerupreco_description"
+                            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="@dimen/space_base"
+                        android:contentDescription="@string/module_gerupreco"
+                        android:src="@drawable/ic_chevron_right_24"
+                        app:tint="@color/secondary" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Rastreamento de preços -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_tracking"
+                style="@style/Widget.GeruPreco.Card.Module"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_stack_gap">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/space_container_padding">
+
+                    <ImageView
+                        android:layout_width="@dimen/module_icon_size_compact"
+                        android:layout_height="@dimen/module_icon_size_compact"
+                        android:background="@drawable/bg_module_icon"
+                        android:contentDescription="@string/module_tracking"
+                        android:elevation="10dp"
+                        android:outlineAmbientShadowColor="@color/primary_container"
+                        android:outlineProvider="background"
+                        android:outlineSpotShadowColor="@color/primary_container"
+                        android:padding="14dp"
+                        android:src="@drawable/ic_trending_down_24"
+                        app:tint="@color/on_primary_container" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="@string/module_gerupreco_description"
-                        android:textAppearance="@style/TextAppearance.GeruPreco.BodyMd"
-                        android:textColor="@color/on_surface_variant" />
+                        android:layout_marginStart="@dimen/space_gutter"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/module_tracking"
+                            android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/module_tracking_description"
+                            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="@dimen/space_base"
+                        android:contentDescription="@string/module_tracking"
+                        android:src="@drawable/ic_chevron_right_24"
+                        app:tint="@color/secondary" />
 
                 </LinearLayout>
 
@@ -91,39 +175,53 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical"
-                    android:padding="32dp">
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/space_container_padding">
 
                     <ImageView
-                        android:layout_width="@dimen/module_icon_size"
-                        android:layout_height="@dimen/module_icon_size"
-                        android:layout_marginBottom="@dimen/space_margin_x"
+                        android:layout_width="@dimen/module_icon_size_compact"
+                        android:layout_height="@dimen/module_icon_size_compact"
                         android:background="@drawable/bg_module_icon"
                         android:contentDescription="@string/module_geruregra"
                         android:elevation="10dp"
                         android:outlineAmbientShadowColor="@color/primary_container"
                         android:outlineProvider="background"
                         android:outlineSpotShadowColor="@color/primary_container"
-                        android:padding="20dp"
+                        android:padding="14dp"
                         android:src="@drawable/ic_calculate_24"
                         app:tint="@color/on_primary_container" />
 
-                    <TextView
-                        android:layout_width="match_parent"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/space_base"
-                        android:gravity="center"
-                        android:text="@string/module_geruregra"
-                        android:textAppearance="@style/TextAppearance.GeruPreco.HeadlineLg" />
+                        android:layout_marginStart="@dimen/space_gutter"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="@string/module_geruregra_description"
-                        android:textAppearance="@style/TextAppearance.GeruPreco.BodyMd"
-                        android:textColor="@color/on_surface_variant" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/module_geruregra"
+                            android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/module_geruregra_description"
+                            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="@dimen/space_base"
+                        android:contentDescription="@string/module_geruregra"
+                        android:src="@drawable/ic_chevron_right_24"
+                        app:tint="@color/secondary" />
 
                 </LinearLayout>
 

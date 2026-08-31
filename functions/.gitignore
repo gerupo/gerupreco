@@ -1,0 +1,6 @@
+node_modules/
+
+# Chave da conta de servico usada pelo run-once.js. Da acesso de escrita ao
+# Firestore e permite enviar push como o projeto - nunca versionar.
+service-account*.json
+*-firebase-adminsdk-*.json

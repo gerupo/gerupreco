@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Carrinho local. Segue o mesmo formato estatico e sincrono do
- * NotificationRepository: a tabela e pequena e a leitura sai na hora.
+ * Carrinho local. Estatico e sincrono, diferente dos repositorios do Firestore
+ * que devolvem por Callback: a tabela e pequena e a leitura sai na hora.
  */
 public class CartRepository {
 

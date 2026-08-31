@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## O que é o app
 
-**Super GeruApp** (`com.vacari.gerupreco`) — app Android nativo, pessoal, em **Java**, com dois módulos escolhidos na tela inicial:
+**Super GeruApp** (`com.vacari.gerupreco`) — app Android nativo, pessoal, em **Java**, com três módulos escolhidos na tela inicial:
 
 - **GeruPreço** — cadastro de produtos por código de barras e consulta do menor preço em estabelecimentos próximos, via API pública da **Nota Paraná**.
+- **Rastreamento** — lista de produtos vigiados com preço-alvo, que notifica os aparelhos quando o preço cai. Ver *Rastreamento de preços*.
 - **GeruRegra** — calculadora de regra de três com múltiplas linhas.
 
 A interface é toda em **português**. Comentários e nomes de código também seguem o português em boa parte.
@@ -53,6 +54,22 @@ No Android Studio o JDK é controlado por `.gradle/config.properties` (`java.hom
 
 Não há lint configurado além do padrão do AGP, nem testes instrumentados reais (`ExampleInstrumentedTest` é o esqueleto gerado).
 
+### A rotina do servidor tem comandos próprios
+
+`functions/` é Node, não Gradle, e não passa pelo JDK acima. Ela tem **dois pontos de entrada sobre o mesmo `src/`**: `run-once.js`, que é o que roda de verdade (cron num servidor doméstico), e `index.js`, o esqueleto da Cloud Function — desativado, ver *De onde a rotina sai importa mais que como ela roda*. Detalhes em [functions/README.md](functions/README.md).
+
+```powershell
+npm --prefix functions install
+npm test                              # roda sem rede e sem Firestore
+npm --prefix functions run once:dry   # rodada simulada: le, nao grava, nao envia
+npm --prefix functions run build      # imagem docker "geruprecotracking"
+npm --prefix functions run docker     # sobe o container, expondo :3456
+```
+
+O `docker` expande `$GERUPRECO_CREDENTIALS` no `-v`, então essa variável precisa apontar para o JSON da conta de serviço antes de chamá-lo.
+
+A CLI do Firebase está presa a uma versão no `package.json` da raiz — instalada no repositório, não na máquina, pelo mesmo motivo do JDK: as máquinas divergem. A primeira execução dela trava esperando resposta sobre coleta de dados de uso quando a saída não é um terminal — parece pendurada na rede. `$env:FIREBASE_CLI_DISABLE_ANALYTICS = "1"` e `--non-interactive` resolvem.
+
 ## Stack e decisões de build
 
 - **AGP 9.3.1 / Gradle 9.7 / Java 25.** O Android Studio 2026.1.3 declara compatibilidade conhecida até AGP 9.3.0; o sync funciona mesmo assim, mas se o IDE reclamar, fixar `9.3.0` resolve.
@@ -72,11 +89,14 @@ Pacotes sob `com.vacari.gerupreco`, organizados por tipo (`activity`, `adapter`,
 
 3. **SQLite/ORMLite** (`DatabaseHelper`) — carrinho de compras (`CartRepository`, tabela `cart_item`). Local, sem sincronização.
 
-Há ainda `NotificationRepository` para notificações de preço-alvo, mas **essa funcionalidade está desativada**: a entrada de menu e o item de contexto que levam à `NotificationActivity` estão comentados, então a tela é inalcançável pela UI.
+O Firestore também guarda o cadastro do rastreamento de preços (`tracking`, `trackingGroup`, `device`), lido pela rotina no servidor — ver *Rastreamento de preços*. Essa rotina é o único código do repositório que não é Android: vive em `functions/`, em Node, e é a única coisa que escreve nessas coleções sem passar pelo app.
+
+Existiu um esqueleto de preço-alvo em SQLite (`Notification`, `NotificationRepository`, `NotificationActivity`) que **nunca chegou a funcionar**: não havia agendador nenhum no projeto, e a tela era inalcançável pela UI. Foi removido na v20, substituído pelo rastreamento. Se aparecer referência a ele em código ou commit antigo, é isso.
 
 ### Fluxo das telas
 
 `MainActivity` → `LowestPriceProduct` (lista de produtos) → `LowestPriceActivity` (preços de um produto).
+`MainActivity` → `TrackingActivity` (rastreamento de preços).
 `MainActivity` → `SimpleProportionActivity` (regra de três).
 `LowestPriceProduct` → `CartActivity` (carrinho) → `CartCompareActivity` (comparador, duas abas).
 
@@ -104,15 +124,26 @@ Arrastar a linha para a direita adiciona ao carrinho; para a esquerda, tira. Os 
 
 O limiar é 35% da largura, abaixo do padrão de 50%, porque a lista é usada de pé no mercado com uma mão só. Vale lembrar que **o gesto tem que começar longe das bordas laterais**: encostado nelas, a navegação por gestos do sistema captura como "voltar".
 
-#### A marca de "já está no carrinho"
+#### As duas marcas de canto
 
-O card do produto que está no carrinho ganha um triângulo no canto superior direito com o ícone do carrinho (`item_in_cart` + `ic_cart_corner_mark`), nas mesmas cores do fundo do arrasto que o produziu — a marca é o resultado visível daquele gesto.
+O card carrega duas marcas triangulares independentes, uma em cada canto superior:
 
-- **A marca desenha por cima do conteúdo**, então o cabeçalho recebe `cart_mark_inset` de margem no bind. Sem isso o triângulo cobre o chip de tamanho/unidade, que mora exatamente nesse canto.
-- **O raio do triângulo é o `radius_lg` do card** (16). Mudar um sem o outro deixa a marca desalinhada da borda arredondada.
-- **O glifo do carrinho vive dentro de um `<group>` do vetor**, encolhido e deslocado para caber no triângulo: o que sair dele é desenhado sobre o fundo escuro do card, em `on_primary`, e some.
-- **A borda do card troca junto** (`outline_variant` → `primary_container`). É ela que faz o produto no carrinho saltar quando a lista é percorrida de relance, sem olhar canto por canto.
-- **Quem sabe o estado é o adapter, não o banco.** `ItemAdapter.setCartBarCodes` guarda os códigos de barras num `Set`, e a Activity o refaz no `onResume` e a cada `onCartChanged` — inclusive na volta da `CartActivity`, que pode ter esvaziado tudo. Consultar o SQLite dentro do `onBindViewHolder` seria uma query por linha rolada.
+| canto | marca | drawable | cores |
+| --- | --- | --- | --- |
+| **direito** | está no carrinho (`item_in_cart`) | `ic_cart_corner_mark` | `primary_container` + `on_primary` |
+| **esquerdo** | preço rastreado (`item_tracked`) | `ic_tracking_corner_mark` | `secondary` + `on_secondary` |
+
+As cores do carrinho repetem o fundo do arrasto para a direita — a marca é o resultado visível daquele gesto.
+
+**Os cantos são opostos porque os estados são independentes.** Um produto pode estar no carrinho, rastreado, ou nas duas coisas, e nesse caso as duas marcas aparecem juntas. Empilhar as duas no mesmo canto obrigaria uma a esconder a outra, e a informação que some é justamente a que diferencia as linhas.
+
+- **As marcas desenham por cima do conteúdo**, então o cabeçalho recebe `corner_mark_inset` de margem **de cada lado que estiver marcado** — à direita para o chip de tamanho/unidade não ficar sob a marca do carrinho, à esquerda para a descrição não ficar sob a de rastreado. Os dois recuos são calculados separadamente no bind; um só, aplicado aos dois lados, encolheria o cabeçalho à toa no caso mais comum, que é ter uma marca só.
+- **O raio do triângulo é o `radius_lg` do card** (16). Mudar um sem o outro deixa a marca desalinhada da borda arredondada. O arco da marca esquerda é o mesmo, com o sentido de varredura invertido (`sweep 0`).
+- **Os glifos vivem dentro de um `<group>` do vetor**, encolhidos e deslocados para caber no triângulo: o que sair dele é desenhado sobre o fundo escuro do card e some.
+- **As escalas dos dois glifos são diferentes de propósito** (0,55 no carrinho, 0,75 na seta). A seta do `ic_trending_down_24` é um traço baixo e vazado; no mesmo fator ela se lê como menor, e as duas marcas ficam visivelmente desiguais. O que precisa casar é o peso visual dentro do triângulo, não o número.
+- **A borda do card responde só ao carrinho** (`outline_variant` → `primary_container`). É ela que faz o produto no carrinho saltar quando a lista é percorrida de relance; se mudasse também por rastreamento, passaria a significar "tem alguma marca", que não ajuda a decidir nada no mercado.
+- **Quem sabe o estado é o adapter, não o banco.** `ItemAdapter.setCartBarCodes` e `setTrackedBarCodes` guardam os códigos de barras em dois `Set` separados. A Activity refaz o do carrinho no `onResume` e a cada `onCartChanged` — inclusive na volta da `CartActivity`, que pode ter esvaziado tudo. Consultar o SQLite dentro do `onBindViewHolder` seria uma query por linha rolada, e para o rastreamento seria pior: a lista vive no Firestore.
+- **`loadTracking()` roda no `onResume`, não no `onCreate`.** O rastreamento pode ser apagado na `TrackingActivity`, e a lista continuaria marcando um produto que ninguém mais vigia. É uma leitura do Firestore por retomada da tela, sobre uma coleção de poucos documentos — o mesmo motivo pelo qual o carrinho é remarcado ali.
 
 O `CartItem` guarda cópia de descrição/tamanho/unidade em vez de referenciar o `Item` do Firestore: a tela monta sem rede, e excluir o produto do catálogo não deixa linha órfã. Adicionar um produto já presente **incrementa a quantidade** em vez de duplicar a linha.
 
@@ -226,6 +257,165 @@ Poucas chamadas e espaçadas — repetir em rajada marca o IP e passa a devolver
 
 Pelo mesmo motivo os cards em `activity_main.xml` não declaram `android:clickable="true"` — se declarassem, dariam feedback de toque enquanto ainda bloqueados.
 
+## Rastreamento de preços
+
+Lista de produtos vigiados com preço-alvo. Quando o preço cai até o alvo, os aparelhos são notificados por push.
+
+**A parte que roda no aparelho é só o cadastro.** Quem consulta a Nota Paraná, compara com o alvo e dispara a notificação é uma rotina agendada fora do app, às **09:00, 12:00, 15:00 e 18:00**. Por isso não há nenhuma consulta de preço na `TrackingActivity`: o que a tela mostra é exatamente o que a rotina vai usar na próxima rodada.
+
+A rotina vive em **[`functions/`](functions/README.md)**, em Node — o único JavaScript do repositório. Ela é a razão de o `firebase.json` e o `.firebaserc` existirem.
+
+> **A Cloud Function não serve, e o motivo é o IP.** Ver *De onde a rotina sai importa mais que como ela roda*. O código continua no repositório (`index.js`) como esqueleto; quem roda de verdade é o `run-once.js`, chamado por cron num servidor doméstico.
+>
+> Se um dia valer reativar: o primeiro deploy falha com `403 ... iam.serviceaccounts.actAs denied on ...-compute@developer.gserviceaccount.com`. Não é permissão do usuário — é a conta de serviço padrão do Compute, que só passa a existir quando a **Compute Engine API** é habilitada, e o IAM ainda leva alguns minutos para propagar. Habilitar, esperar, repetir o deploy.
+
+### As três coleções
+
+```
+tracking/{id}         barCode, description, targetPrice, groupId, scope,
+                      deviceId, active, lastNotifiedPrice, lastNotifiedAt, lastCheckedAt
+trackingGroup/{id}    name, targetPrice, scope, deviceId, active
+device/{ANDROID_ID}   name, fcmToken, lastSeen
+```
+
+- **`description` é cópia do catálogo**, não referência, pelo mesmo motivo do `CartItem`: a tela monta sem uma segunda consulta, e excluir o produto do catálogo não deixa linha órfã.
+- **Preço é `Double` porque o Firestore não tem tipo decimal.** Toda leitura passa por `BigDecimal` antes de virar texto.
+- **Grupo manda em alvo e alcance.** Um `tracking` com `groupId` ignora o próprio `targetPrice` e `scope` — quem vale é o do grupo. Os campos ficam desligados no diálogo, e não escondidos: sumir da tela faria parecer que o rastreamento perdeu o alvo, quando ele só passou a vir de outro lugar.
+- **Apagar um grupo solta os produtos antes**, herdando o alvo que o grupo ditava (`TrackingRepository.releaseFromGroup`). Na ordem inversa, uma falha na segunda escrita deixaria produtos apontando para um grupo inexistente, sem alvo e sem aviso.
+- **Entrar num grupo rearma o aviso** (`lastNotifiedPrice`/`lastNotifiedAt` a nulo), pelo mesmo motivo de mudar o alvo na mão: o alvo passou a vir do grupo, e o último preço avisado valia para o anterior. **O alvo e o escopo próprios não são apagados** — é o que o diálogo de edição já fazia, e é o que permite ao produto voltar com alvo próprio quando o grupo for removido.
+
+#### Grupo nasce pelo produto, não por um botão
+
+Não há botão de "novo grupo". Grupo é sempre **um nome escrito**, com as grafias já usadas aparecendo como sugestão — **o mesmo arranjo do campo de tags**, e pela mesma razão: grupo aqui é um nome, não um cadastro que se abre antes de usar.
+
+São dois campos, e os dois criam:
+
+| onde | campo |
+| --- | --- |
+| `TrackProductDialog` — cadastro/edição do rastreamento | `AutoCompleteTextView` `track_group`, vazio = sem grupo |
+| `AddToGroupDialog` — long press na tela de rastreamento | o diálogo inteiro é esse campo |
+
+O `TrackProductDialog` usava um `Spinner`, e com ele **só dava para entrar em grupo que já existia**: criar um exigia sair do cadastro. Trocar por campo escrito é o que fecha esse buraco — e é a razão de o campo aceitar nome livre em vez de listar.
+
+Antes existia um FAB no rodapé que criava o grupo vazio. Ele pedia que o usuário criasse primeiro e só depois lembrasse de voltar nos produtos para povoá-lo — e **grupo sem produto não faz nada**: nenhuma consulta, nenhum alerta, uma linha na lista que não significa coisa alguma.
+
+- **Nome novo cria o grupo; nome existente reaproveita**, com deduplicação por nome normalizado e a grafia já cadastrada — igual às tags. Sem isso "Cervejas" e "cervejas" viveriam como dois grupos, cada um com o próprio alvo, e nada na lista denunciaria a duplicata.
+- **O grupo novo nasce com um alvo, sempre.** Nascer sem ele deixaria o produto mudo: dentro do grupo quem manda é o alvo dele, e o produto sairia da rodada do servidor sem nada na tela explicando por que parou de avisar. De onde vem o alvo depende do campo: no `AddToGroupDialog` é o do produto que criou (o diálogo só pede o nome); no `TrackProductDialog` são os campos de alvo e alcance da própria tela.
+- **No `TrackProductDialog` o campo de grupo tem três estados**, e o que muda entre eles é de quem são o alvo e o alcance: **vazio** → do produto; **nome que já existe** → do grupo, e os campos ficam desligados; **nome novo** → os campos seguem ligados e o que estiver neles vira o alvo e o alcance do grupo a ser criado. O texto sob os campos troca junto e diz qual dos três está valendo — sem ele, campo ligado e campo desligado seriam a única pista.
+- **O produto guarda alvo e alcance mesmo entrando num grupo novo.** É o que permite a ele voltar com alvo próprio quando o grupo for removido, em vez de ficar sem nenhum.
+- **O grupo é gravado antes do produto.** Na ordem inversa o produto ficaria com um `groupId` de algo que talvez não chegasse a existir. Se a criação do grupo falhar, o rastreamento é salvo **sem** grupo em vez de se perder: ele tem alvo próprio e continua avisando, e o aviso diz o que faltou.
+- **A ação só aparece quando o produto ainda não está num grupo.** Num produto já agrupado ela ofereceria "adicionar" ao que já está dentro; trocar ou sair do grupo é pelo `Spinner` do diálogo de edição.
+- **A sugestão abre em dois gatilhos — clique e foco** (`setOnClickListener` + `setOnFocusChangeListener` com `post`). O primeiro toque num campo sem foco só pede o foco: o clique não chega, e a lista não abria justamente na primeira vez, que é quando o usuário mais precisa ver o que já existe. O `post` é necessário porque no instante do foco a janela do popup ainda não tem onde se ancorar.
+- **`TrackingGroupDialog` só edita, nunca cria.** Sem o FAB, nenhum grupo sem id chega nele — por isso o título é fixo, o botão de remover está sempre presente e a gravação é sempre `update`. Manter os ramos de "novo" faria um leitor supor que ainda se cria grupo por ali.
+
+### `lastNotifiedPrice` é a regra inteira de "uma vez por queda"
+
+Nulo significa **armado**. O servidor notifica quando o menor preço fica abaixo do alvo e ou o campo está nulo, ou o preço caiu ainda mais que o já avisado; e volta o campo a nulo assim que o preço sobe acima do alvo, rearmando para a próxima queda. Sem isso, quatro rodadas por dia repetiriam o mesmo aviso enquanto a promoção durasse, e o usuário desligaria as notificações do app.
+
+O app zera esse campo em dois pontos, e os dois importam: ao **mudar o alvo** (o preço já avisado valia para o alvo anterior) e ao **retomar um rastreamento pausado** (enquanto pausado o preço pode ter subido e caído de novo).
+
+### Escopo: geral e particular
+
+O app **não tem autenticação**, então "notificar um usuário específico" só pode significar "notificar um aparelho". A identidade é o `Settings.Secure.ANDROID_ID` (`DeviceIdentity`), escolhido por sobreviver a atualizações e reinstalações — some só em reset de fábrica, quando o aparelho de fato virou outro. O token do FCM **não serve** para isso: muda sozinho.
+
+- `GERAL` → o servidor publica no tópico **`geral`**, e todo aparelho se inscreve nele na abertura. **Esse nome é contrato com o servidor**; mudar de um lado só deixa o alerta sem ninguém escutando.
+- `PARTICULAR` → o servidor manda para o `fcmToken` do `device` correspondente.
+- **Escopo desconhecido ou ausente conta como geral.** Alerta que chega a todo mundo incomoda; alerta que não chega a ninguém passa despercebido.
+
+#### O seletor tem duas opções, e só pode ter duas
+
+`TrackingScopes.options()` devolve **"Todos os aparelhos"** e **"Este aparelho"** — nada mais.
+
+O seletor já listou todo aparelho registrado, com o nome de cada um, e havia "Renomear este aparelho" no menu da tela justamente para distinguir três "Redmi Note 12". Isso permitia criar daqui um alerta mirado no celular de outra pessoa, e quem recebia não tinha como saber de onde veio nem como desligar: o cadastro vive no aparelho que o criou. **Alcance só se escolhe para si ou para todos.**
+
+O que caiu junto, e não deve voltar por engano:
+
+- **A renomeação inteira** — o diálogo, o item de menu, `DeviceRepository.rename` e as strings. Sem lista de aparelhos não há o que nomear.
+- **O cache de aparelhos** (`cached`/`searchAll`/`nameOf`) e o aquecimento dele em `TrackingRegistration`. Existiam só para escrever o rótulo do seletor.
+- **A consulta de aparelhos na frente do `load()` da `TrackingActivity`.** Eram três encadeadas; hoje são duas, e os grupos continuam vindo antes dos produtos porque estes leem o alvo deles.
+- **A coleção `device` continua sendo escrita**, e isso não é resíduo: o `fcmToken` gravado ali é como o servidor acerta um alerta particular. O que sumiu foi a leitura pelo app.
+
+Uma consequência que confunde se pegar de surpresa: **o nome no Firestore ainda é o modelo de fábrica**, gravado por `DeviceRepository.register` só quando o documento não existe. Na tela o aparelho é sempre "Este aparelho"; o nome real fica para quem abrir o console conseguir dizer de qual celular é cada documento — "Este aparelho" repetido em toda linha não diria nada.
+
+#### O que cada aparelho enxerga da coleção
+
+`TrackingScopes.isVisible` é o outro lado da mesma regra, e mora no mesmo arquivo de propósito: escolher alcance e ver alcance são a mesma decisão lida das duas pontas, e separá-las deixaria uma mudar sem a outra.
+
+- **Alerta geral aparece em todo aparelho, e qualquer um edita ou apaga.** Ele vale para todos, então não tem dono. É o que permite cadastrar no celular e ajustar no tablet.
+- **Alerta particular só aparece no aparelho que ele acerta.** Noutro celular seria uma linha que a pessoa não pode desligar e cujo alerta ela nunca vai receber, e apagar por engano tiraria o aviso de quem depende dele.
+- **Dentro de um grupo a visibilidade é a do grupo**, porque o alcance também é. Esconder o grupo e deixar os produtos dele na lista mostraria linhas com alvo vindo de um lugar invisível. Um produto **geral** dentro de um grupo particular de outro aparelho **não aparece** — o grupo é quem manda.
+- **Grupo que sumiu do cadastro é caso à parte:** o produto órfão cai no próprio escopo, do mesmo jeito que a linha da lista cai no próprio alvo.
+- O filtro roda nas **duas** telas que leem o cadastro — `TrackingActivity` e o `loadTracking()` da `LowestPriceProduct`, que alimenta a marca de canto e o "já rastreado" do long press. Por isso o `loadTracking()` da lista de produtos encadeia grupos antes de produtos, em vez de disparar os dois em paralelo.
+
+**Isso é recorte de tela, não de segurança.** As regras do Firestore são públicas: qualquer um com a chave do repositório lê e escreve a coleção inteira. O filtro existe para a lista não mostrar o que não dá para operar dali.
+
+Por isso não existe mais o rótulo "outro aparelho": o que ele nomearia nunca chega na tela.
+
+### A janela é de 24 horas, e os dados atrasam um dia
+
+A rotina só considera ofertas das últimas 24 horas. Medido na API em 28/08/2026, sobre dois produtos do catálogo: **nenhuma nota do próprio dia aparece** — o lote de ontem é o mais novo que existe (Omo líquido: 3 ofertas de ontem, 12 em 13 dias; filtro Melita: 10 de ontem, 20 em 13 dias).
+
+Duas consequências: o alerta fala do **preço de ontem**, não do de hoje; e produto de giro lento passa dias sem oferta nenhuma na janela, o que é **silêncio, não erro**. Sem esse recorte, uma nota barata de meses atrás dispararia alerta para sempre.
+
+### De onde a rotina sai importa mais que como ela roda
+
+**A Nota Paraná devolve dados forjados para IP de datacenter, e não é limite de volume.** Medido em 30/08/2026, com a função implantada em `southamerica-east1`:
+
+| origem | resultado |
+| --- | --- |
+| Cloud Function (IP do Google) | 100% forjado em **todas** as rodadas — `sobraram 0` em todo GTIN |
+| máquina de casa (IP residencial) | 11 e 43 registros, **zero** forjados, no mesmo minuto |
+
+O detalhe que fecha o diagnóstico: **a primeira rodada registrada já veio inteira forjada**, no horário das 18:00 do agendamento original, antes de qualquer volume acumulado. Não foi raspagem detectada por frequência — é o tratamento dado à origem.
+
+Por isso a rotina **roda num servidor doméstico**. Consultar dali é usar a API como o próprio app já faz todo dia na tela do carrinho.
+
+São **três pontos de entrada sobre o mesmo `src/run.js`** — muda só de onde vem a credencial (um JSON de conta de serviço apontado por `GOOGLE_APPLICATION_CREDENTIALS`) e quem agenda:
+
+| entrada | quem agenda | uso |
+| --- | --- | --- |
+| `server.js` | ele mesmo, por dentro | é o que o container roda |
+| `run-once.js` | cron do sistema | uma rodada e sai |
+| `index.js` | Cloud Scheduler | desativado |
+
+**O container roda o `server.js`, e não o `run-once.js`.** Um container que executa e termina, com `--restart=unless-stopped`, reinicia em laço fechado — e cada volta é uma consulta a mais na Nota Paraná. Dentro do container não há cron, então o processo fica de pé e se agenda sozinho (`src/schedule.js`, lógica pura e testada, com o offset fixo de Brasília pelo mesmo motivo do `message.js`: o alpine pode não ter `tzdata`).
+
+**A porta 3456 é o `/health`**, e não enfeite: um serviço que só escreve em log é invisível de fora do container, e "não chegou alerta nenhum" continuaria sem resposta. Ele devolve a última rodada, o resumo dela e a próxima. Há também um `POST /run`, **desligado por padrão** — disparar uma rodada envia push de verdade, e a porta pode acabar encaminhada para fora sem ninguém lembrar; ligar exige definir `TRACKING_TOKEN`.
+
+**A credencial não entra na imagem.** É montada em tempo de execução (`-v`, e o `npm run docker` já faz isso). Copiada com `COPY`, ficaria numa camada legível por quem tiver a imagem — e ela dá escrita no Firestore e permissão de enviar push. Não é a mesma coisa que a chave de API do `google-services.json`, que é pública por desenho.
+
+Duas consequências que valem preservar:
+
+- **A saída do `run-once.js` tem código 3 reservado** para "tudo voltou forjado". Sem ele, IP marcado e "nenhum produto atingiu o alvo" terminam os dois em silêncio, e é o cron que precisa perceber a diferença.
+- **Não se resolve isso com proxy residencial ou rotação de IP.** A API está deliberadamente entregando dado falso para datacenter; contornar isso é burlar o controle antiabuso de um serviço público. Rodar da rede de casa não é contorno — é o uso normal.
+
+O `DecoyFilter` e o espaçamento continuam valendo em qualquer origem, porque a marcação por volume também existe e não some quando o IP é bom:
+
+O `DecoyFilter` e o espaçamento de requisições foram **portados para a função** (`functions/src/decoyFilter.js`, `functions/src/requestSpacer.js`), e lá o filtro **registra em log quando descarta**: se o IP for marcado, tudo volta forjado, a limpeza esvazia a resposta e o sintoma é nenhum alerta disparar — silêncio idêntico ao de "nenhum produto atingiu o alvo". Sem o log não há como distinguir os dois. É o número que se olha primeiro na linha de resumo da rodada.
+
+Duas defesas a mais do lado do servidor, pelo mesmo motivo: `maxInstances: 1`, porque o espaçador é estado de processo e duas rodadas simultâneas dobrariam a taxa contra a API; e `retryCount: 0`, porque uma rodada que falhou por erro da API voltaria batendo no mesmo IP já sobrecarregado. Nenhum alerta se perde na rodada descartada — `lastNotifiedPrice` só é gravado depois do envio confirmado.
+
+### O que a rotina decide, e o que fica de fora
+
+`functions/src/trackingRules.js` é lógica pura e testada, como o `CartCompare` do carrinho: recebe o rastreamento, o grupo e as ofertas, e devolve se há alerta e que estado gravar. `run.js` faz a rodada em volta dela.
+
+- **Erro de consulta não é "sem oferta".** Produto cujo GTIN falhou fica sem ser avaliado e sem `lastCheckedAt` novo. Tratar falha como lista vazia rearmaria alertas já avisados, e o mesmo aviso voltaria na rodada seguinte.
+- **Envio falho não grava `lastNotifiedPrice`.** O alerta continua armado e a próxima rodada tenta de novo; gravar antes perderia o aviso em silêncio.
+- **Alerta particular sem token não vira alerta geral.** Aviso destinado a um aparelho chegando em todos é pior que aviso nenhum, então fica sem enviar — o token reaparece assim que o app for aberto naquele aparelho. É o único caso em que escopo particular não cai no `geral`.
+- **A gravação é campo a campo (`update`), nunca o documento inteiro.** A tela pode ter mudado alvo, escopo ou descrição enquanto a rodada consultava a API, e um `set` com os dados lidos no começo desfaria a edição do usuário.
+- **Não há gatilho HTTP.** Um endpoint aberto na internet dispara push para todos os aparelhos, e o app não tem autenticação para proteger isso. Para rodar fora do horário, mande o próprio Cloud Scheduler executar o job (`gcloud scheduler jobs run`, ver o README).
+
+### Detalhes de UI que custaram decisão
+
+- **Os cards da tela inicial viraram faixas horizontais** (ícone à esquerda, texto à direita, `module_icon_size_compact`). O bloco alto com o glifo empilhado não cabia três vezes na tela, e rolar para escolher módulo esconderia justamente o que a tela oferece.
+- **Long press num produto já rastreado abre o cadastro existente**, em vez de criar outro. Duas linhas do mesmo código de barras renderiam duas notificações na mesma queda, e nada na lista denunciaria a duplicata.
+- **`TrackingActivity` encadeia três consultas de propósito**: aparelhos antes de tudo (senão a linha de um alerta particular mostraria o `ANDROID_ID` cru no lugar do nome), depois grupos, depois produtos — que leem o alvo dos grupos.
+- **A flag `loaded` segura o aviso de vazio**, pelo mesmo motivo das abas do carrinho.
+- **`POST_NOTIFICATIONS` é permissão de runtime a partir do Android 13.** Sem ela o alerta chega ao aparelho e morre em silêncio — de novo indistinguível de "nada atingiu o alvo". É pedida em `configureActions`, junto dos cards, porque numa versão bloqueada pelo gate o usuário não chega a usar nada disso.
+- **`configureActions` pode ser chamado mais de uma vez** pelo listener do Firestore, então o registro e o pedido de permissão têm guarda (`trackingReady`). Sem ela, um segundo diálogo do sistema empilharia sobre o primeiro ainda sem resposta.
+- **O id do canal de notificação vive em `strings.xml`** (`tracking_channel_id`). O manifesto precisa dele como canal padrão do FCM — é o caminho usado quando o sistema desenha a notificação sozinho, com o app fechado, sem passar pelo `GeruMessagingService`. Duas cópias soltas divergiriam.
+- **A BoM do Firebase entrou junto com o Messaging.** As bibliotecas compartilham código interno e versões escolhidas a mão divergem com facilidade; a BoM 34.18.0 fixa firestore 26.6.0 (era 26.5.0, pinado a mão) e messaging 25.1.2.
+
 ## Modelo de dados
 
 `Item` (Firestore): `id`, `barCode`, `description`, `size`, `unitMeasure`, `tags`.
@@ -284,7 +474,6 @@ Todas custaram um ciclo de depuração; vale não repetir.
 - **Activities com campo de texto precisam de `android:windowSoftInputMode="adjustResize"`** no manifesto, ou o teclado cobre FAB e conteúdo.
 - **`Spinner` precisa de largura folgada.** O padding da seta consome ~55dp; com pouco espaço, unidades de duas letras (`ML`, `KG`) simplesmente deixam de ser desenhadas enquanto as de uma letra (`G`, `L`) aparecem. Atenção especial ao trocar `layout_width="match_parent"`+peso por `0dp`+peso — a distribuição de largura resultante é bem diferente.
 - **`SearchView` reexibe o teclado ao reassumir o foco.** Ao fechar um diálogo ou voltar de outra tela, o teclado volta sozinho. `LowestPriceProduct.clearSearchFocus()` é chamado antes de cada sobreposição; manter esse cuidado ao adicionar novas ações na lista.
-- **`NotificationAdapter` faz cast de `<Switch>` para `android.widget.Switch`**, mas o AppCompat infla a tag como `SwitchCompat`. Isso estouraria em runtime — está latente só porque a tela é inalcançável.
 - **A action bar da lista comporta 3 ações.** Um item com `showAsAction="never"` cria o botão de overflow e **empurra o scanner de código de barras para dentro dele**. Foi o que aconteceu ao pôr "Adicionar por tag" ali; por isso essa ação mora na `CartActivity`.
 - **Item de menu com `actionLayout` não passa por `onOptionsItemSelected`.** O ícone do carrinho precisa de `setOnClickListener` na própria action view.
 - **`Chip` com cor de fundo fixa não mostra seleção.** `setChipBackgroundColorResource` aplica a mesma cor a todos os estados; é preciso um `ColorStateList` com `state_checked` (ver `res/color/chip_window_background.xml`).
@@ -342,6 +531,25 @@ Passo a passo completo em **[RELEASE.md](RELEASE.md)**. O resumo: subir `appVers
 
 A ordem importa: o Firestore é o gatilho de produção. Mudá-lo antes do APK estar acessível no GitHub deixa o app inutilizável, porque o gate de versão bloqueia a home e o download falha.
 
+### O commit não termina a release — o Firestore termina
+
+**Sempre que um commit subir o `appVersionCode`, atualize o Firestore na mesma sessão, logo depois do push, sem esperar que peçam.** Enquanto o documento `appVersion` apontar para o código anterior, a versão nova existe no repositório e não chega a aparelho nenhum: o `UpdateJob` só oferece atualização quando o `versionCode` do Firestore é maior que o instalado. O sintoma é silencioso — nada quebra, o app simplesmente continua na versão velha —, e foi exatamente assim que a v18 ficou commitada e empurrada por um dia sem estar publicada.
+
+Isso vale só para commit que muda o `appVersionCode`. Commit que não mexe na versão não tem APK novo em `app/release/` e não tem o que publicar.
+
+Antes de gravar, confirme as duas coisas que a *regra de ouro* do RELEASE.md protege — o push chegou ao `origin/main` e a URL do GitHub devolve um APK com o mesmo SHA-256 do arquivo local (passo 9). Só então o PATCH do passo 10, sempre com `updateMask.fieldPaths` e com o `versionCode` como `integerValue`.
+
+```powershell
+$v   = [int](Select-String -Path "app\build.gradle" -Pattern 'def appVersionCode = (\d+)').Matches[0].Groups[1].Value
+$key = (Get-Content "app\google-services.json" -Raw | ConvertFrom-Json).client[0].api_key[0].current_key
+$fs  = (Invoke-RestMethod "https://firestore.googleapis.com/v1/projects/gerupreco/databases/(default)/documents/appVersion?key=$key").documents[0].fields
+"build.gradle=$v  firestore=$($fs.versionCode.integerValue)  url=$($fs.url.stringValue)"
+```
+
+Um `versionCode` menor que o do `build.gradle` nessa saída é o sinal de release pendente de publicação.
+
 ## Segurança
+
+As regras do Firestore são públicas, e com o rastreamento isso passou a expor também os **tokens do FCM** na coleção `device`. Um token sozinho não permite enviar push (isso exige a credencial do servidor), então o risco é baixo — mas a lista de aparelhos e os produtos vigiados ficam legíveis por qualquer um com a chave da API, que está no repositório.
 
 `key.jks` e `readmeKey.txt` (que contém a senha do keystore em texto plano) estão no repositório e **não** constam do `.gitignore` — e a senha também está no `signingConfigs` do `app/build.gradle`. Qualquer pessoa com acesso ao repo pode assinar builds como se fossem oficiais e, como o app instala APK de uma URL pública sem verificação extra, isso distribui código direto para os aparelhos. Vale rotacionar a chave, removê-los do versionamento e manter o repositório privado.

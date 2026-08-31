@@ -24,9 +24,18 @@
     <dimen name="module_icon_size">80dp</dimen>
     <dimen name="module_icon_glyph">40dp</dimen>
 
-    <!-- Marca de "no carrinho" no canto do card. O recuo e a folga que o
-         cabecalho ganha para o chip de tamanho nao ficar embaixo dela. -->
-    <dimen name="cart_mark_size">40dp</dimen>
-    <dimen name="cart_mark_inset">12dp</dimen>
+    <!-- Marcas de canto do card: "no carrinho" a direita, "rastreado" a
+         esquerda. O recuo e a folga que o cabecalho ganha de cada lado para o
+         chip de tamanho e a descricao nao ficarem embaixo delas.
 
+         Os dois valem para as duas marcas de proposito: sao a mesma forma em
+         cantos opostos, e tamanhos diferentes fariam o card parecer torto. -->
+    <dimen name="corner_mark_size">40dp</dimen>
+    <dimen name="corner_mark_inset">12dp</dimen>
+
+
+    <!-- Cards da tela inicial. Com tres modulos o card virou faixa horizontal:
+         o glifo grande e empilhado nao cabia tres vezes na tela sem rolagem, e
+         rolar para escolher modulo esconde uma das opcoes. -->
+    <dimen name="module_icon_size_compact">56dp</dimen>
 </resources>

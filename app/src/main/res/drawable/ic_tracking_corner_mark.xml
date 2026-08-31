@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Marca de "preco rastreado", sobreposta ao canto superior ESQUERDO do card.
+
+    E o espelho do ic_cart_corner_mark, que ocupa o canto direito. Os dois cantos
+    sao opostos porque os dois estados sao independentes: um produto pode estar
+    no carrinho, rastreado, ou nas duas coisas, e nesse caso as duas marcas
+    aparecem sem disputar espaco.
+
+    O triangulo acompanha o raio do card (radius_lg = 16) para que a borda
+    arredondada da marca coincida com a do MaterialCardView - mudar um sem o
+    outro deixa a marca desalinhada. O arco espelha o do carrinho: mesma
+    geometria, sentido de varredura invertido (sweep 0 em vez de 1).
+
+    O glifo vem do ic_trending_down_24, encolhido e deslocado para dentro do
+    triangulo por um <group>: o que sair dele cai sobre o fundo escuro do card e
+    some.
+
+    As cores sao a familia secundaria (secondary + on_secondary), e nao a
+    primaria do carrinho. Duas marcas da mesma cor em cantos opostos se leem
+    como decoracao do card; cores distintas dizem que sao dois estados
+    diferentes, sem precisar de legenda.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="40"
+    android:viewportHeight="40">
+
+    <path
+        android:fillColor="@color/secondary"
+        android:pathData="M40,0 L16,0 A16,16 0 0 0 0,16 L0,40 Z" />
+
+    <!--
+        Escala maior que a do carrinho (0.75 contra 0.55) de proposito: a seta e
+        um glifo baixo e vazado, e no mesmo fator ela se le como menor que o
+        carrinho, deixando as duas marcas visivelmente desiguais. O que importa
+        e o peso visual dentro do triangulo, nao o numero.
+    -->
+    <group
+        android:scaleX="0.75"
+        android:scaleY="0.75"
+        android:translateX="3"
+        android:translateY="3">
+        <path
+            android:fillColor="@color/on_secondary"
+            android:pathData="M16,18l2.29,-2.29 -4.88,-4.88 -4,4L2,7.41 3.41,6l6,6 4,-4 6.3,6.29L22,12v6z" />
+    </group>
+
+</vector>

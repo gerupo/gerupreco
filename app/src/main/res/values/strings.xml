@@ -124,4 +124,58 @@
     <string name="cart_offer_registered">Registrado em</string>
     <string name="cart_offer_registered_value">%1$s (%2$s)</string>
 
+
+    <!-- Rastreamento de precos -->
+    <string name="module_tracking">Rastreamento</string>
+    <string name="module_tracking_description">Avisa quando o preço cair até o alvo.</string>
+    <string name="tracking_title">Rastreamento de produtos</string>
+    <string name="tracking_track">Rastrear preço</string>
+    <string name="tracking_edit">Editar rastreamento</string>
+    <string name="tracking_stop">Parar de rastrear</string>
+    <string name="tracking_groups_header">Grupos</string>
+    <string name="tracking_products_header">Produtos</string>
+    <string name="tracking_edit_group">Editar grupo</string>
+    <string name="tracking_group_name">Nome do grupo</string>
+    <string name="tracking_group_name_required">Informe o nome do grupo.</string>
+    <string name="tracking_group_name_hint">Escreva ou escolha um grupo</string>
+    <!-- O alvo do grupo novo vem do produto, e nao e pedido no dialogo -->
+    <string name="tracking_group_new_hint">Nome novo cria o grupo, com o alvo deste produto.</string>
+    <string name="tracking_group_first_hint">Ainda não há grupos. O primeiro nasce com o alvo deste produto.</string>
+    <string name="tracking_target">Preço alvo</string>
+    <string name="tracking_target_required">Informe o preço alvo.</string>
+    <string name="tracking_target_value">Alvo %1$s</string>
+    <string name="tracking_group_of">Grupo: %1$s</string>
+    <string name="tracking_no_group">Sem grupo</string>
+    <string name="tracking_group_owns_target">O alvo e o alcance vêm do grupo.</string>
+    <!-- Nome que ainda nao existe: os campos seguem ligados e o que for
+         digitado neles vira o alvo e o alcance do grupo novo. -->
+    <string name="tracking_group_will_be_created">Grupo novo. O alvo e o alcance abaixo serão dele.</string>
+    <string name="tracking_group_failed">Não foi possível criar o grupo. O rastreamento foi salvo sem ele.</string>
+    <string name="tracking_scope">Notificar</string>
+    <string name="tracking_scope_all">Todos os aparelhos</string>
+    <string name="tracking_scope_this_device">Este aparelho</string>
+    <string name="tracking_empty">Nenhum produto rastreado</string>
+    <string name="tracking_empty_hint">Segure um produto na lista do GeruPreço e escolha "Rastrear preço".</string>
+    <string name="tracking_saved">%1$s entrou no rastreamento</string>
+    <string name="tracking_tracked">Preço rastreado</string>
+    <string name="tracking_removed">%1$s saiu do rastreamento</string>
+    <string name="tracking_stop_confirm">Deseja parar de rastrear este produto?</string>
+    <string name="tracking_group_saved">Grupo salvo</string>
+    <string name="tracking_group_delete">Remover grupo</string>
+    <string name="tracking_group_delete_confirm">Remover o grupo? Os produtos que estavam nele voltam a usar alvo próprio.</string>
+    <string name="tracking_paused">Pausado</string>
+    <string name="tracking_pause">Pausar</string>
+    <string name="tracking_resume">Retomar</string>
+    <string name="tracking_add_to_group">Adicionar a grupo</string>
+    <string name="tracking_added_to_group">%1$s entrou no grupo %2$s</string>
+    <!-- Sem a permissao o alerta chega ao aparelho e nao aparece na tela -->
+    <string name="tracking_permission_denied">Sem permissão de notificação os alertas não aparecem.</string>
+    <string name="tracking_channel_name">Alertas de preço</string>
+    <string name="tracking_channel_description">Avisa quando um produto rastreado atinge o preço alvo.</string>
+    <string name="tracking_alert_title">%1$s baixou</string>
+    <string name="tracking_alert_body">%1$s em %2$s (alvo %3$s)</string>
+    <string name="tracking_group_label">Grupo</string>
+    <!-- Um so lugar define o canal: o manifesto (canal padrao que o sistema usa
+         ao desenhar com o app fechado) e o TrackingNotifier leem daqui. -->
+    <string name="tracking_channel_id" translatable="false">price_alerts</string>
 </resources>

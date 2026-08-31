@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/space_container_padding"
+        android:paddingTop="@dimen/space_base"
+        android:paddingBottom="@dimen/space_base">
+
+        <TextView
+            android:id="@+id/track_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/product"
+            android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_container_padding"
+            android:text="@string/tracking_group_label"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+        <!-- Campo escrito, e nao Spinner: com um Spinner so dava para escolher
+             grupo ja existente, e criar um exigia sair daqui. Vazio significa
+             sem grupo; nome novo cria o grupo na hora, como no AddToGroupDialog
+             e no campo de tags. -->
+        <AutoCompleteTextView
+            android:id="@+id/track_group"
+            style="@style/Widget.GeruPreco.EditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_base"
+            android:completionThreshold="1"
+            android:hint="@string/tracking_no_group"
+            android:imeOptions="actionNext"
+            android:importantForAutofill="no"
+            android:inputType="textCapSentences"
+            android:popupBackground="@drawable/bg_dialog"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_container_padding"
+            android:text="@string/tracking_target"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+        <EditText
+            android:id="@+id/track_target"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/price_placeholder"
+            android:importantForAutofill="no"
+            android:inputType="numberDecimal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_container_padding"
+            android:text="@string/tracking_scope"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+        <Spinner
+            android:id="@+id/track_scope"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_base" />
+
+        <!-- Aparece quando ha grupo escolhido: dentro de um grupo o alvo e o
+             alcance sao do grupo, e os dois campos acima ficam desligados. -->
+        <TextView
+            android:id="@+id/track_group_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_stack_gap"
+            android:text="@string/tracking_group_owns_target"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm"
+            android:textColor="@color/primary_container"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</ScrollView>

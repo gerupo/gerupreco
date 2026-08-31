@@ -24,9 +24,4 @@
         android:title="@string/cart"
         app:actionLayout="@layout/action_cart"
         app:showAsAction="always" />
-
-<!--    <item android:id="@+id/menu_notification"-->
-<!--        android:icon="@drawable/baseline_notifications_active_24"-->
-<!--        android:title="@string/bar_code"-->
-<!--        app:showAsAction="ifRoom" />-->
 </menu>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O container raiz absorve os insets; o RecyclerView so cuida do proprio
+     espacamento. Promover a lista a raiz com fitsSystemWindows faria os cards
+     desenharem por baixo da action bar. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:fitsSystemWindows="true"
+    tools:context=".activity.tracking.TrackingActivity">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/tracking_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingHorizontal="@dimen/space_screen_x"
+        android:paddingTop="@dimen/space_gutter"
+        android:paddingBottom="96dp"
+        android:scrollbars="none" />
+
+    <!-- Estado vazio -->
+    <LinearLayout
+        android:id="@+id/tracking_empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/space_margin_x"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:alpha="0.35"
+            android:contentDescription="@string/tracking_title"
+            android:src="@drawable/ic_trending_down_24"
+            android:tint="@color/on_surface_variant" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_gutter"
+            android:text="@string/tracking_empty"
+            android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_base"
+            android:gravity="center"
+            android:text="@string/tracking_empty_hint"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+    </LinearLayout>
+
+</FrameLayout>

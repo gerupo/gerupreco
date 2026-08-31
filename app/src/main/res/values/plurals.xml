@@ -48,4 +48,9 @@
         <item quantity="other">%1$d dias</item>
     </plurals>
 
+
+    <plurals name="tracking_group_members">
+        <item quantity="one">%d produto</item>
+        <item quantity="other">%d produtos</item>
+    </plurals>
 </resources>

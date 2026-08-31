@@ -4,6 +4,9 @@
 
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- A partir do Android 13 o alerta de preco chega ao aparelho e nao aparece
+         sem esta permissao, concedida em runtime pela MainActivity. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -28,8 +31,9 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.lowestprice.NotificationActivity"
-            android:exported="false" />
+            android:name=".activity.tracking.TrackingActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activity.lowestprice.LowestPriceProduct"
             android:exported="false"
@@ -55,6 +59,29 @@
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="fullSensor"
             tools:replace="screenOrientation" />
+
+        <!-- Alertas de preco vindos da rotina agendada -->
+        <service
+            android:name=".messaging.GeruMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Usados quando o proprio sistema desenha a notificacao, com o app
+             fechado: nesse caminho o GeruMessagingService nem e chamado, e sem
+             estes valores o alerta cairia num canal generico com o icone do app
+             como silhueta borrada. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/tracking_channel_id" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_price_alert" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/primary_container" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

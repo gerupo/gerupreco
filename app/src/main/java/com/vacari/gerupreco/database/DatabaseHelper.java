@@ -9,7 +9,6 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.vacari.gerupreco.model.sqlite.CartItem;
-import com.vacari.gerupreco.model.sqlite.Notification;
 
 import java.sql.SQLException;
 
@@ -18,10 +17,16 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
     /**
      * v2 acrescenta a tabela do carrinho.
+     *
+     * A tabela "notification", do preco-alvo em SQLite que nunca chegou a
+     * funcionar, saiu daqui sem subir a versao de proposito: o onUpgrade abaixo
+     * recria a base do zero, e subir a versao so para apagar uma tabela morta
+     * levaria o carrinho do usuario junto. Em bases antigas ela fica para tras
+     * sem ninguem consultando. O rastreamento que a substituiu vive no
+     * Firestore, porque quem le aquela lista e a rotina no servidor.
      */
     private static final int DATABASE_VERSION = 2;
 
-    private Dao<Notification, Integer> notificationDAO;
     private Dao<CartItem, Integer> cartItemDAO;
 
     public DatabaseHelper(Context context) {
@@ -31,7 +36,6 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase database, ConnectionSource connectionSource) {
         try {
-            TableUtils.createTable(connectionSource, Notification.class);
             TableUtils.createTable(connectionSource, CartItem.class);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -40,25 +44,16 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
     /**
      * Ao subir de versao a base e recriada. O carrinho e uma lista de compras
-     * descartavel e as notificacoes estao desativadas, entao nao ha dado que
-     * justifique escrever migracao.
+     * descartavel, entao nao ha dado que justifique escrever migracao.
      */
     @Override
     public void onUpgrade(SQLiteDatabase database, ConnectionSource connectionSource, int oldVersion, int newVersion) {
         try {
-            TableUtils.dropTable(connectionSource, Notification.class, true);
             TableUtils.dropTable(connectionSource, CartItem.class, true);
             onCreate(database, connectionSource);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    public Dao<Notification, Integer> getNotificationDAO() throws SQLException {
-        if (notificationDAO == null) {
-            notificationDAO = DaoManager.createDao(getConnectionSource(), Notification.class);
-        }
-        return notificationDAO;
     }
 
     public Dao<CartItem, Integer> getCartItemDAO() throws SQLException {

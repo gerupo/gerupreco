@@ -23,16 +23,25 @@ import com.vacari.gerupreco.R;
 import com.vacari.gerupreco.activity.MainActivity;
 import com.vacari.gerupreco.activity.cart.CartActivity;
 import com.vacari.gerupreco.adapter.lowestprice.ItemAdapter;
-import com.vacari.gerupreco.dialog.lowestprice.CreateNotificationProductDialog;
 import com.vacari.gerupreco.dialog.GenericDialog;
 import com.vacari.gerupreco.dialog.lowestprice.RegisterProductDialog;
+import com.vacari.gerupreco.dialog.tracking.TrackProductDialog;
 import com.vacari.gerupreco.model.firebase.Item;
+import com.vacari.gerupreco.model.firebase.Tracking;
+import com.vacari.gerupreco.model.firebase.TrackingGroup;
 import com.vacari.gerupreco.repository.CartRepository;
 import com.vacari.gerupreco.repository.ItemRepository;
+import com.vacari.gerupreco.repository.TrackingGroupRepository;
+import com.vacari.gerupreco.repository.TrackingRepository;
 import com.vacari.gerupreco.update.UpdateJob;
+import com.vacari.gerupreco.util.StringUtil;
 import com.vacari.gerupreco.util.SwipeToCart;
+import com.vacari.gerupreco.util.TrackingScopes;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class LowestPriceProduct extends AppCompatActivity {
 
@@ -44,6 +53,16 @@ public class LowestPriceProduct extends AppCompatActivity {
 
     private ActivityResultLauncher<ScanOptions> barcodeLauncher;
 
+    /**
+     * Grupos e produtos ja rastreados, buscados uma vez para o dialogo do long
+     * press abrir sem esperar rede. Vazio significa "ainda nao voltou", e o
+     * dialogo apenas nao oferece grupo - preferivel a travar o gesto mais curto
+     * da tela.
+     */
+    private List<TrackingGroup> trackingGroups = new ArrayList<>();
+
+    private List<Tracking> trackings = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +73,35 @@ public class LowestPriceProduct extends AppCompatActivity {
         configureActions();
         registerResults();
         searchItems();
+    }
+
+    /**
+     * Recarrega o cadastro do rastreamento e remarca a lista.
+     *
+     * Roda no onResume, e nao so no onCreate, porque a marca de rastreado pode
+     * ficar velha por fora desta tela: o rastreamento some quando o usuario o
+     * apaga na TrackingActivity, e a lista continuaria marcando um produto que
+     * ninguem mais vigia. E a mesma razao pela qual o carrinho e remarcado ali.
+     */
+    private void loadTracking() {
+        // Encadeadas, e nao em paralelo: o recorte do que este aparelho pode ver
+        // depende do grupo, que e quem dita o alcance de quem esta dentro dele.
+        TrackingGroupRepository.searchAll(loadedGroups ->
+                TrackingRepository.searchAll(loadedTrackings -> {
+                    trackingGroups = TrackingScopes.visibleGroups(this, loadedGroups);
+                    trackings = TrackingScopes.visibleTrackings(this, loadedTrackings, loadedGroups);
+                    refreshTrackingMarks();
+                }));
+    }
+
+    private void refreshTrackingMarks() {
+        Set<String> barCodes = new HashSet<>();
+        for (Tracking tracking : trackings) {
+            if (StringUtil.isNotEmpty(tracking.getBarCode())) {
+                barCodes.add(tracking.getBarCode());
+            }
+        }
+        mAdapter.setTrackedBarCodes(barCodes);
     }
 
     private void initGUI() {
@@ -114,6 +162,7 @@ public class LowestPriceProduct extends AppCompatActivity {
         super.onResume();
         updateCartBadge();
         refreshCartMarks();
+        loadTracking();
     }
 
     @Override
@@ -152,11 +201,6 @@ public class LowestPriceProduct extends AppCompatActivity {
             openScanBarCode();
             return true;
         }
-
-//        if(item.getItemId() == R.id.menu_notification) {
-//            openNotification();
-//            return true;
-//        }
 
         return false;
     }
@@ -210,6 +254,7 @@ public class LowestPriceProduct extends AppCompatActivity {
     public void onCartChanged(String message) {
         updateCartBadge();
         refreshCartMarks();
+        loadTracking();
         toast(message);
     }
 
@@ -258,9 +303,40 @@ public class LowestPriceProduct extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void openNotification() {
-        Intent intent = new Intent(LowestPriceProduct.this, NotificationActivity.class);
-        startActivity(intent);
+    /**
+     * Poe o produto no rastreamento de precos. A partir daqui quem consulta e
+     * compara com o alvo e a rotina agendada no servidor - a lista so cadastra.
+     *
+     * Um produto ja rastreado abre o cadastro que existe, em vez de criar outro:
+     * duas linhas do mesmo codigo de barras renderiam duas notificacoes na mesma
+     * queda, e nada na lista denunciaria a duplicata.
+     */
+    public void trackProduct(int position) {
+        clearSearchFocus();
+        Item item = mAdapter.getItemByPosition(position);
+
+        Tracking tracking = trackedBy(item.getBarCode());
+        boolean isNew = tracking == null;
+        if (isNew) {
+            tracking = TrackProductDialog.newFor(item);
+        }
+
+        new TrackProductDialog(this, tracking, trackingGroups,
+                saved -> runOnUiThread(() -> {
+                    if (saved != null && isNew) {
+                        toast(getString(R.string.tracking_saved, item.getDescription()));
+                    }
+                    loadTracking();
+                })).show();
+    }
+
+    private Tracking trackedBy(String barCode) {
+        for (Tracking tracking : trackings) {
+            if (barCode != null && barCode.equals(tracking.getBarCode())) {
+                return tracking;
+            }
+        }
+        return null;
     }
 
     /**
@@ -282,12 +358,6 @@ public class LowestPriceProduct extends AppCompatActivity {
         clearSearchFocus();
         Item item = mAdapter.getItemByPosition(position);
         GenericDialog.showConfirmDeleteDialog(this, data -> ItemRepository.delete(item.getId(), dat -> searchItems()));
-    }
-
-    public void createNotification(int position) {
-        clearSearchFocus();
-        Item item = mAdapter.getItemByPosition(position);
-        new CreateNotificationProductDialog(this, item).show();
     }
 
     public void editItem(int position) {

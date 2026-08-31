@@ -75,7 +75,12 @@ dependencies {
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
 
     // Firebase & Utilities
-    implementation 'com.google.firebase:firebase-firestore:26.5.0'
+    // A BoM entrou junto com o Messaging: as bibliotecas do Firebase compartilham
+    // codigo interno e versoes escolhidas a mao divergem com facilidade. Ela fixa
+    // firestore 26.6.0 (era 26.5.0, pinado a mao) e messaging 25.1.2.
+    implementation platform('com.google.firebase:firebase-bom:34.18.0')
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-messaging'
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
 
     // Network & JSON

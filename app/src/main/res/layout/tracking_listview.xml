@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/tracking_card"
     style="@style/Widget.GeruPreco.Card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -21,44 +23,60 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/nt_description"
+                android:id="@+id/tracking_description"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/product"
-                android:textAppearance="@style/TextAppearance.GeruPreco.HeadlineLgMobile" />
-
-            <Switch
-                android:id="@+id/nt_active"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_stack_gap" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_stack_gap"
-            android:baselineAligned="false"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+                android:textAppearance="@style/TextAppearance.GeruPreco.TitleMd" />
 
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/target_price"
-                android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps" />
-
-            <TextView
-                android:id="@+id/nt_price"
+                android:id="@+id/tracking_target"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_stack_gap"
                 android:text="@string/price_placeholder"
                 android:textAppearance="@style/TextAppearance.GeruPreco.PriceDisplay" />
 
         </LinearLayout>
+
+        <!-- Segunda linha: de onde vem o alvo e ate onde o alerta vai. As duas
+             coisas que o usuario nao consegue deduzir olhando o preco. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_base"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tracking_scope"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/tracking_scope_all"
+                android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps" />
+
+            <TextView
+                android:id="@+id/tracking_paused"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_base"
+                android:background="@drawable/bg_chip"
+                android:text="@string/tracking_paused"
+                android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tracking_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/tracking_no_group"
+            android:textAppearance="@style/TextAppearance.GeruPreco.LabelCaps.Primary"
+            android:visibility="gone" />
 
     </LinearLayout>
 

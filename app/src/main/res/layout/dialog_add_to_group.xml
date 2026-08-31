@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="@dimen/space_container_padding"
+    android:paddingTop="@dimen/space_base"
+    android:paddingBottom="@dimen/space_base">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tracking_group_name"
+        android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+    <!-- Mesmo arranjo do campo de tags: escreve-se o nome, e os ja usados
+         aparecem como sugestao. Digitar um nome novo cria o grupo; escolher um
+         da lista reaproveita o que existe. -->
+    <AutoCompleteTextView
+        android:id="@+id/add_to_group_name"
+        style="@style/Widget.GeruPreco.EditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:completionThreshold="1"
+        android:hint="@string/tracking_group_name_hint"
+        android:imeOptions="actionDone"
+        android:importantForAutofill="no"
+        android:inputType="textCapSentences"
+        android:popupBackground="@drawable/bg_dialog"
+        android:textSize="16sp" />
+
+    <!-- O alvo nao e pedido aqui de proposito: o grupo novo nasce com o do
+         produto que o criou, e mudar depois e no card do grupo. -->
+    <TextView
+        android:id="@+id/add_to_group_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_stack_gap"
+        android:textAppearance="@style/TextAppearance.GeruPreco.BodySm"
+        android:textColor="@color/on_surface_variant" />
+
+</LinearLayout>

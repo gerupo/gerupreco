@@ -1,0 +1,14 @@
+# O node_modules e reinstalado dentro da imagem pelo npm ci: copiar o de fora
+# traria binarios compilados para o SO errado.
+node_modules/
+
+# Nada disto e usado em producao.
+test/
+README.md
+.gitignore
+.dockerignore
+Dockerfile
+
+# Rede de seguranca: credencial nunca entra na imagem, nem por engano.
+service-account*.json
+*-firebase-adminsdk-*.json

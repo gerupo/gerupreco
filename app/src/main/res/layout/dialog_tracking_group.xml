@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/space_container_padding"
+        android:paddingTop="@dimen/space_base"
+        android:paddingBottom="@dimen/space_base">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tracking_group_name"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+        <EditText
+            android:id="@+id/group_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAutofill="no"
+            android:inputType="textCapSentences" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_container_padding"
+            android:text="@string/tracking_target"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+        <EditText
+            android:id="@+id/group_target"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/price_placeholder"
+            android:importantForAutofill="no"
+            android:inputType="numberDecimal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_container_padding"
+            android:text="@string/tracking_scope"
+            android:textAppearance="@style/TextAppearance.GeruPreco.BodySm" />
+
+        <Spinner
+            android:id="@+id/group_scope"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_base" />
+
+    </LinearLayout>
+
+</ScrollView>

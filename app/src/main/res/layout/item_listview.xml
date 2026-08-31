@@ -114,11 +114,24 @@
              triangulo cobriria o chip de tamanho, que fica neste mesmo canto. -->
         <ImageView
             android:id="@+id/item_in_cart"
-            android:layout_width="@dimen/cart_mark_size"
-            android:layout_height="@dimen/cart_mark_size"
+            android:layout_width="@dimen/corner_mark_size"
+            android:layout_height="@dimen/corner_mark_size"
             android:layout_gravity="top|end"
             android:contentDescription="@string/cart_in_cart"
             android:src="@drawable/ic_cart_corner_mark"
+            android:visibility="gone" />
+
+        <!-- Marca de "preco rastreado", no canto oposto ao do carrinho: os dois
+             estados sao independentes e podem valer ao mesmo tempo, entao
+             dividir os cantos e o que permite mostrar os dois sem um cobrir o
+             outro. Aqui quem recua no bind e a descricao, pelo mesmo motivo. -->
+        <ImageView
+            android:id="@+id/item_tracked"
+            android:layout_width="@dimen/corner_mark_size"
+            android:layout_height="@dimen/corner_mark_size"
+            android:layout_gravity="top|start"
+            android:contentDescription="@string/tracking_tracked"
+            android:src="@drawable/ic_tracking_corner_mark"
             android:visibility="gone" />
 
     </FrameLayout>

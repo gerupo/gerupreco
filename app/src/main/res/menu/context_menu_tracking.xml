@@ -1,0 +1,20 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Pausar e retomar sao a mesma linha em dois estados: so um deles faz
+         sentido de cada vez, e mostrar os dois pediria que o usuario
+         descobrisse qual esta valendo. -->
+    <item
+        android:id="@+id/action_tracking_pause"
+        android:title="@string/tracking_pause" />
+    <item
+        android:id="@+id/action_tracking_resume"
+        android:title="@string/tracking_resume" />
+    <!-- So aparece quando ha grupo cadastrado e o produto ainda nao esta em um:
+         num produto ja agrupado a linha ofereceria "adicionar" ao que ja esta
+         dentro, e sem grupo nenhum abriria uma lista vazia. -->
+    <item
+        android:id="@+id/action_tracking_add_to_group"
+        android:title="@string/tracking_add_to_group" />
+    <item
+        android:id="@+id/action_tracking_stop"
+        android:title="@string/tracking_stop" />
+</menu>
