@@ -10,6 +10,7 @@ import com.vacari.gerupreco.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -101,6 +102,57 @@ public class TrackingRepository {
                 tracking.setTargetPrice(groupTarget);
             }
             batch.set(db.collection(COLLECTION).document(tracking.getId()), toValues(tracking));
+        }
+
+        batch.commit()
+                .addOnSuccessListener(ignored -> callback.callback(null))
+                .addOnFailureListener(e -> callback.callback(null));
+    }
+
+    /**
+     * Zera o aviso dos produtos de um grupo, para o alvo novo valer a partir de
+     * agora.
+     *
+     * Sem isto, mudar o alvo do grupo deixava os membros calados: a decisao
+     * compara o menor preco com o ultimo ja avisado, e aquele valia para o alvo
+     * anterior. Subir o alvo de R$ 6,00 para R$ 8,00 com o produto ja avisado a
+     * R$ 5,99 nao renderia aviso nenhum, e nada na tela explicaria.
+     *
+     * E o mesmo que o TrackProductDialog ja fazia ao salvar um produto - a falha
+     * era o dialogo do grupo nao carregar a consequencia de mudar o alvo que ele
+     * proprio dita.
+     *
+     * Grava so os dois campos, e nao o documento inteiro: a tela de rastreamento
+     * de outro aparelho pode estar editando o mesmo produto, e um set completo
+     * com os dados lidos aqui desfaria a edicao dele.
+     */
+    public static void rearmGroup(List<Tracking> trackings, String groupId,
+                                  Callback<Void> callback) {
+        List<Tracking> affected = new ArrayList<>();
+        for (Tracking tracking : trackings) {
+            // Quem nunca foi avisado ja esta armado: reescrever seria uma
+            // gravacao por produto sem nada mudar.
+            if (groupId.equals(tracking.getGroupId()) && tracking.getLastNotifiedPrice() != null) {
+                affected.add(tracking);
+            }
+        }
+
+        if (affected.isEmpty()) {
+            callback.callback(null);
+            return;
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        WriteBatch batch = db.batch();
+
+        Map<String, Object> rearmed = new HashMap<>();
+        rearmed.put("lastNotifiedPrice", null);
+        rearmed.put("lastNotifiedAt", null);
+
+        for (Tracking tracking : affected) {
+            tracking.setLastNotifiedPrice(null);
+            tracking.setLastNotifiedAt(null);
+            batch.update(db.collection(COLLECTION).document(tracking.getId()), rearmed);
         }
 
         batch.commit()

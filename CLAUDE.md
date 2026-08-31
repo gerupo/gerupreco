@@ -331,7 +331,7 @@ E o campo volta a nulo — rearmando — assim que o preço **sobe acima do alvo
 
 O app zera `lastNotifiedPrice` em dois pontos, e os dois importam: ao **mudar o alvo** pelo diálogo do produto (o preço já avisado valia para o alvo anterior) e ao **retomar um rastreamento pausado** (enquanto pausado o preço pode ter subido e caído de novo).
 
-> **Mudar o alvo pelo diálogo do *grupo* não rearma os membros.** O `TrackingGroupDialog` grava o grupo e pronto, enquanto o `TrackProductDialog` rearma sempre. É uma inconsistência conhecida, da mesma família da do alvo efetivo: o grupo dita o alvo, mas não carrega as consequências de mudá-lo.
+**Mudar o alvo do grupo rearma os membros** (`TrackingRepository.rearmGroup`), pelo mesmo motivo. Sem isso, subir o alvo de R$ 6,00 para R$ 8,00 com o produto já avisado a R$ 5,99 não renderia aviso nenhum, e nada na tela explicaria. Só o **alvo** dispara o rearme — renomear um grupo não muda o que qualifica como queda. O alvo anterior é lido **antes** de abrir o diálogo, porque ele altera o próprio objeto e depois de salvar não há mais como saber o que mudou.
 
 ### Escopo: geral e particular
 
@@ -521,6 +521,7 @@ Notas que economizam tempo:
 - As Activities além da `MainActivity` são `exported="false"`; `am start` direto falha com `SecurityException`. É preciso navegar pela UI.
 - Um elemento pode existir na hierarquia com o texto certo e mesmo assim **não ser desenhado**. Quando a suspeita for essa, ler os pixels da região (`System.Drawing.Bitmap.GetPixel`) distingue "não renderizado" de "renderizado sem contraste".
 - Long press: `input swipe <x> <y> <x> <y> 900`.
+- **Campo de preço só aceita ponto pelo `input text`.** Os campos de alvo são `inputType="numberDecimal"`, e a vírgula é descartada em silêncio: `input text "6,50"` grava **650**. Digite `6.50` — o `PriceUtil` lê o ponto como decimal de qualquer forma. Custou uma gravação errada no Firestore de verdade.
 - **Confirme se a injeção de eventos é permitida antes de planejar em cima dela**, com `input tap 1 1` num canto inerte: sai `exit=0` quando funciona e `SecurityException: INJECT_EVENTS` quando não. Aparelho Xiaomi só injeta com **Opções do desenvolvedor → Depuração USB (Configurações de segurança)** ligado, o que pede conta Mi e chip com dados — e essa opção some ao trocar de aparelho ou ao resetar as opções de desenvolvedor. Sem injeção, leitura (`uiautomator dump`, `screencap`) continua valendo e a saída é pedir para o usuário navegar enquanto se lê a tela.
 - **Para flagrar algo que só existe durante um gesto** — o fundo revelado por um swipe, por exemplo —, encadeie o gesto e a captura numa chamada só, para o aparelho controlar o tempo: `adb shell "input swipe 200 625 520 625 2000 & sleep 1.4; screencap -p /sdcard/mid.png"`. Dois comandos adb separados não acertam a janela.
 

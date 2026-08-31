@@ -25,6 +25,7 @@ import com.vacari.gerupreco.util.TrackingScopes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Rastreamento de precos: o que esta sendo vigiado, com que alvo e para quem o
@@ -111,13 +112,38 @@ public class TrackingActivity extends AppCompatActivity {
         openGroupDialog(group);
     }
 
+    /**
+     * O alvo anterior e lido antes de abrir: o dialogo altera o proprio objeto,
+     * entao depois de salvar nao ha mais como saber o que mudou.
+     */
     private void openGroupDialog(TrackingGroup group) {
+        Double targetBefore = group.getTargetPrice();
+
         new TrackingGroupDialog(this, group,
                 saved -> runOnUiThread(() -> {
                     Toast.makeText(this, R.string.tracking_group_saved, Toast.LENGTH_SHORT).show();
-                    load();
+                    rearmMembers(saved, targetBefore);
                 }),
                 deleted -> deleteGroup(deleted)).show();
+    }
+
+    /**
+     * Alvo do grupo alterado rearma quem esta dentro dele, pelo mesmo motivo que
+     * salvar um produto rearma: o preco ja avisado valia para o alvo anterior, e
+     * sem limpar isso um alvo novo e mais alto ficaria calado ate o preco cair
+     * abaixo do que ja tinha sido avisado.
+     *
+     * So o alvo dispara o rearme. Renomear um grupo nao muda o que qualifica
+     * como queda, e rearmar ali renderia um alerta repetido sem motivo.
+     */
+    private void rearmMembers(TrackingGroup group, Double targetBefore) {
+        if (Objects.equals(targetBefore, group.getTargetPrice())) {
+            load();
+            return;
+        }
+
+        TrackingRepository.rearmGroup(trackings, group.getId(),
+                ignored -> runOnUiThread(this::load));
     }
 
     /**
