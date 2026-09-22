@@ -13,12 +13,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.vacari.gerupreco.R;
+import com.vacari.gerupreco.activity.lowestprice.LowestPriceActivity;
 import com.vacari.gerupreco.activity.lowestprice.LowestPriceProduct;
 import com.vacari.gerupreco.activity.simpleproportion.SimpleProportionActivity;
 import com.vacari.gerupreco.activity.tracking.TrackingActivity;
 import com.vacari.gerupreco.dialog.ChangelogDialog;
+import com.vacari.gerupreco.messaging.TrackingNotifier;
 import com.vacari.gerupreco.messaging.TrackingRegistration;
 import com.vacari.gerupreco.update.UpdateJob;
+import com.vacari.gerupreco.util.StringUtil;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,6 +34,12 @@ public class MainActivity extends AppCompatActivity {
      * so gastaria escrita.
      */
     private boolean trackingReady;
+
+    /**
+     * Produto do alerta de preco tocado na bandeja, esperando a versao ser
+     * validada para abrir a tela de precos dele.
+     */
+    private String pendingBarCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +58,58 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
+        // So na primeira criacao: recriada por rotacao, a Activity recebe o
+        // mesmo intent de novo, e reabriria os precos de um alerta ja visto.
+        if (savedInstanceState == null) {
+            pendingBarCode = alertBarCode(getIntent());
+        }
+
         UpdateJob.initJobUpdate(this);
+    }
+
+    /**
+     * Com o app ja aberto e a versao validada, o toque no alerta pode chegar
+     * aqui em vez de recriar a Activity - e ai configureActions nao roda de
+     * novo, entao a tela de precos abre na hora.
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        pendingBarCode = alertBarCode(intent);
+        if (trackingReady) {
+            openPendingPrices();
+        }
+    }
+
+    /**
+     * O alerta de preco chega aqui pelos dois caminhos. Com o app fechado quem
+     * desenha a notificacao e o sistema, e o toque abre a Activity de entrada
+     * com o bloco data da mensagem como extras - dai a chave ser o nome do
+     * campo no servidor (functions/src/notify.js), e nao o "BARCODE" que a
+     * tela de precos le. Com o app aberto quem desenha e o TrackingNotifier,
+     * que aponta para ca com a mesma chave.
+     */
+    private static String alertBarCode(Intent intent) {
+        String barCode = intent == null ? null : intent.getStringExtra(TrackingNotifier.EXTRA_BAR_CODE);
+        return StringUtil.isEmpty(barCode) ? null : barCode;
+    }
+
+    /**
+     * Passa pelo gate de versao de proposito, em vez de o alerta apontar
+     * direto para a tela de precos: numa versao bloqueada o toque na
+     * notificacao abriria o app por uma porta lateral.
+     */
+    private void openPendingPrices() {
+        if (pendingBarCode == null) {
+            return;
+        }
+
+        Intent intent = new Intent(this, LowestPriceActivity.class);
+        intent.putExtra("BARCODE", pendingBarCode);
+        pendingBarCode = null;
+        startActivity(intent);
     }
 
     public void configureActions() {
@@ -81,6 +141,8 @@ public class MainActivity extends AppCompatActivity {
         // validada e o app esta liberado. Com a versao desatualizada quem
         // ocupa a tela e o dialogo de atualizacao.
         ChangelogDialog.showIfNeeded(this);
+
+        openPendingPrices();
     }
 
     /**

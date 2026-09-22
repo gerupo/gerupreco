@@ -99,6 +99,7 @@ Existiu um esqueleto de preço-alvo em SQLite (`Notification`, `NotificationRepo
 
 `MainActivity` → `LowestPriceProduct` (lista de produtos) → `LowestPriceActivity` (preços de um produto).
 `MainActivity` → `TrackingActivity` (rastreamento de preços).
+Notificação de alerta → `MainActivity` (gate de versão) → `LowestPriceActivity` do produto avisado. Ver *Detalhes de UI que custaram decisão*.
 `MainActivity` → `SimpleProportionActivity` (regra de três).
 `LowestPriceProduct` → `CartActivity` (carrinho) → `CartCompareActivity` (comparador, duas abas).
 
@@ -285,6 +286,16 @@ device/{ANDROID_ID}   name, fcmToken, lastSeen
 - **Apagar um grupo solta os produtos antes**, herdando o alvo que o grupo ditava (`TrackingRepository.releaseFromGroup`). Na ordem inversa, uma falha na segunda escrita deixaria produtos apontando para um grupo inexistente, sem alvo e sem aviso.
 - **Entrar num grupo rearma o aviso** (`lastNotifiedPrice`/`lastNotifiedAt` a nulo), pelo mesmo motivo de mudar o alvo na mão: o alvo passou a vir do grupo, e o último preço avisado valia para o anterior. **O alvo e o escopo próprios não são apagados** — é o que o diálogo de edição já fazia, e é o que permite ao produto voltar com alvo próprio quando o grupo for removido.
 
+#### Produto agrupado mora dentro do grupo
+
+A lista da `TrackingActivity` tem dois blocos, **Grupos** e **Produtos**, e o de produtos só traz quem **não** está em grupo. Os membros aparecem recuados logo abaixo do card do grupo, que abre e fecha como uma pasta (`TrackingAdapter.rebuild`).
+
+- **Toque no grupo abre; editar é no long press** (`context_menu_tracking_group`). Grupo sem produto não abre, e o chevron dele some para o toque não prometer uma lista que não vem.
+- **"Está num grupo" é o que o `TrackingPlan` resolve, não o `groupId` cru.** O produto órfão, com grupo que sumiu do cadastro, cai no bloco de produtos. Separado pelo `groupId` ele não apareceria em lugar nenhum.
+- **Os grupos abertos sobrevivem ao recarregamento** (`expandedGroupIds`). Toda edição chama `load()`, e sem isso editar um produto fecharia o grupo que foi aberto para chegar nele.
+- **O card do produto não diz mais de que grupo é.** O rótulo "Grupo: X" saiu porque o produto agrupado só aparece logo abaixo do card do grupo.
+- **A `TrackingActivity` continua com a lista inteira em `trackings`.** `rearmGroup` e `releaseFromGroup` dependem dela, e só o adapter separa os blocos.
+
 #### Grupo nasce pelo produto, não por um botão
 
 Não há botão de "novo grupo". Grupo é sempre **um nome escrito**, com as grafias já usadas aparecendo como sugestão — **o mesmo arranjo do campo de tags**, e pela mesma razão: grupo aqui é um nome, não um cadastro que se abre antes de usar.
@@ -434,6 +445,10 @@ O `DecoyFilter` e o espaçamento de requisições foram **portados do app** (`fu
 - **A flag `loaded` segura o aviso de vazio**, pelo mesmo motivo das abas do carrinho.
 - **`POST_NOTIFICATIONS` é permissão de runtime a partir do Android 13.** Sem ela o alerta chega ao aparelho e morre em silêncio — de novo indistinguível de "nada atingiu o alvo". É pedida em `configureActions`, junto dos cards, porque numa versão bloqueada pelo gate o usuário não chega a usar nada disso.
 - **`configureActions` pode ser chamado mais de uma vez** pelo listener do Firestore, então o registro e o pedido de permissão têm guarda (`trackingReady`). Sem ela, um segundo diálogo do sistema empilharia sobre o primeiro ainda sem resposta.
+- **Tocar no alerta abre a tela de preços do produto** (`LowestPriceActivity`), sempre passando pela `MainActivity`. O alerta chega por dois caminhos: com o app fechado quem desenha é o sistema, e o toque abre a Activity de entrada com o bloco `data` da mensagem como extras; com o app aberto quem desenha é o `TrackingNotifier`, que aponta para a mesma `MainActivity` com a mesma chave (`TrackingNotifier.EXTRA_BAR_CODE` = `"barCode"`). **Esse nome é contrato com o `notify.js`**: renomear de um lado só faz o toque cair na home, sem erro nenhum.
+  - **A tela de preços só abre depois do gate de versão** (`openPendingPrices` no fim de `configureActions`). Apontar o alerta direto para ela deixaria usar uma versão bloqueada pela porta lateral da notificação.
+  - **O `PendingIntent` usa request code por produto.** Com um só, o `FLAG_UPDATE_CURRENT` faria o alerta mais novo reescrever o extra do que ainda está na bandeja.
+  - **O extra só é lido na primeira criação** (`savedInstanceState == null`). Recriada por rotação, a Activity recebe o mesmo intent e reabriria os preços de um alerta já visto.
 - **O id do canal de notificação vive em `strings.xml`** (`tracking_channel_id`). O manifesto precisa dele como canal padrão do FCM — é o caminho usado quando o sistema desenha a notificação sozinho, com o app fechado, sem passar pelo `GeruMessagingService`. Duas cópias soltas divergiriam.
 - **A BoM do Firebase entrou junto com o Messaging.** As bibliotecas compartilham código interno e versões escolhidas a mão divergem com facilidade; a BoM 34.18.0 fixa firestore 26.6.0 (era 26.5.0, pinado a mão) e messaging 25.1.2.
 

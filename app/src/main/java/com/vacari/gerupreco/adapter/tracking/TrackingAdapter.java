@@ -6,6 +6,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -22,16 +23,23 @@ import com.vacari.gerupreco.util.TrackingPlan;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * Lista do rastreamento: grupos primeiro, produtos depois, com um cabecalho
- * anunciando cada bloco.
+ * Lista do rastreamento: grupos primeiro, produtos sem grupo depois, com um
+ * cabecalho anunciando cada bloco.
  *
  * Uma lista so, e nao duas abas como no comparador do carrinho: grupos e
  * produtos nao competem entre si, sao o mesmo cadastro em dois niveis, e o
  * produto e lido junto do grupo que dita o alvo dele.
+ *
+ * Produto que esta num grupo nao aparece no bloco de produtos: ele mora dentro
+ * do grupo, e o toque no card do grupo abre e fecha a lista dele logo abaixo.
+ * Repetir o produto nos dois lugares fazia o bloco de produtos crescer com
+ * linhas cujo alvo nem e o delas.
  */
 public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -45,12 +53,24 @@ public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     /** Grupo por id, para a linha do produto saber de onde vem o alvo dele. */
     private final Map<String, TrackingGroup> groupsById = new HashMap<>();
 
+    /**
+     * Grupos abertos, por id. Sobrevive ao refresh de proposito: toda edicao
+     * recarrega a lista, e editar um produto de dentro do grupo fecharia o
+     * grupo que o usuario acabou de abrir para chegar nele.
+     */
+    private final Set<String> expandedGroupIds = new HashSet<>();
+
+    private List<TrackingGroup> groups = new ArrayList<>();
+    private List<Tracking> trackings = new ArrayList<>();
+
     private static class Row {
         int type;
         String header;
         TrackingGroup group;
         Tracking tracking;
         int members;
+        /** Produto listado dentro do grupo, e nao no bloco de produtos. */
+        boolean nested;
     }
 
     public TrackingAdapter(TrackingActivity mActivity) {
@@ -58,35 +78,73 @@ public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     public void refresh(List<TrackingGroup> groups, List<Tracking> trackings) {
-        rows.clear();
-        groupsById.clear();
+        this.groups = groups;
+        this.trackings = trackings;
 
+        groupsById.clear();
         for (TrackingGroup group : groups) {
             groupsById.put(group.getId(), group);
+        }
+
+        rebuild();
+    }
+
+    private void rebuild() {
+        rows.clear();
+
+        Map<String, List<Tracking>> membersByGroup = new HashMap<>();
+        List<Tracking> ungrouped = new ArrayList<>();
+
+        // "Esta num grupo" e o que o TrackingPlan resolve, nao o groupId cru: o
+        // produto cujo grupo sumiu do cadastro cai no proprio alvo, e se fosse
+        // separado pelo groupId nao apareceria em lugar nenhum.
+        for (Tracking tracking : trackings) {
+            TrackingPlan plan = TrackingPlan.of(tracking, groupsById);
+            if (plan.isInGroup()) {
+                membersByGroup.computeIfAbsent(tracking.getGroupId(), id -> new ArrayList<>())
+                        .add(tracking);
+            } else {
+                ungrouped.add(tracking);
+            }
         }
 
         if (!groups.isEmpty()) {
             rows.add(header(mActivity.getString(R.string.tracking_groups_header)));
             for (TrackingGroup group : groups) {
+                List<Tracking> members = membersByGroup.get(group.getId());
+                if (members == null) {
+                    members = new ArrayList<>();
+                }
+
                 Row row = new Row();
                 row.type = TYPE_GROUP;
                 row.group = group;
-                row.members = countMembers(trackings, group.getId());
+                row.members = members.size();
                 rows.add(row);
+
+                if (expandedGroupIds.contains(group.getId())) {
+                    for (Tracking member : members) {
+                        rows.add(product(member, true));
+                    }
+                }
             }
         }
 
-        if (!trackings.isEmpty()) {
+        if (!ungrouped.isEmpty()) {
             rows.add(header(mActivity.getString(R.string.tracking_products_header)));
-            for (Tracking tracking : trackings) {
-                Row row = new Row();
-                row.type = TYPE_PRODUCT;
-                row.tracking = tracking;
-                rows.add(row);
+            for (Tracking tracking : ungrouped) {
+                rows.add(product(tracking, false));
             }
         }
 
         notifyDataSetChanged();
+    }
+
+    private void toggle(TrackingGroup group) {
+        if (!expandedGroupIds.remove(group.getId())) {
+            expandedGroupIds.add(group.getId());
+        }
+        rebuild();
     }
 
     private Row header(String text) {
@@ -96,14 +154,12 @@ public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return row;
     }
 
-    private int countMembers(List<Tracking> trackings, String groupId) {
-        int members = 0;
-        for (Tracking tracking : trackings) {
-            if (groupId != null && groupId.equals(tracking.getGroupId())) {
-                members++;
-            }
-        }
-        return members;
+    private Row product(Tracking tracking, boolean nested) {
+        Row row = new Row();
+        row.type = TYPE_PRODUCT;
+        row.tracking = tracking;
+        row.nested = nested;
+        return row;
     }
 
     @Override
@@ -144,7 +200,7 @@ public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             return;
         }
 
-        bindProduct((ProductViewHolder) viewHolder, row.tracking);
+        bindProduct((ProductViewHolder) viewHolder, row.tracking, row.nested);
     }
 
     private void bindGroup(GroupViewHolder holder, Row row) {
@@ -157,10 +213,27 @@ public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 R.plurals.tracking_group_members, row.members, row.members));
         holder.paused.setVisibility(group.isActive() ? View.GONE : View.VISIBLE);
 
-        holder.card.setOnClickListener(v -> mActivity.editGroup(group));
+        // Grupo vazio nao tem o que abrir. O chevron some para o toque nao
+        // prometer uma lista que nao vem.
+        boolean expandable = row.members > 0;
+        holder.chevron.setVisibility(expandable ? View.VISIBLE : View.INVISIBLE);
+        holder.chevron.setRotation(expandedGroupIds.contains(group.getId()) ? 90f : 0f);
+
+        holder.group = group;
+        holder.card.setOnClickListener(expandable ? v -> toggle(group) : null);
     }
 
-    private void bindProduct(ProductViewHolder holder, Tracking tracking) {
+    private void bindProduct(ProductViewHolder holder, Tracking tracking, boolean nested) {
+        // Dentro do grupo a linha recua, para ler como parte dele. Por isso o
+        // card do produto nao diz mais de que grupo e: so aparece agrupado
+        // logo abaixo do card do grupo, que ja diz.
+        ViewGroup.MarginLayoutParams params =
+                (ViewGroup.MarginLayoutParams) holder.card.getLayoutParams();
+        params.setMarginStart(nested
+                ? mActivity.getResources().getDimensionPixelSize(R.dimen.space_gutter)
+                : 0);
+        holder.card.setLayoutParams(params);
+
         // Quem resolve "grupo manda em alvo e alcance" e o TrackingPlan, o mesmo
         // que o dialogo de cadastro usa: enquanto cada tela resolvia por conta
         // propria, a lista mostrava o alvo do grupo e o dialogo o alvo proprio
@@ -170,13 +243,6 @@ public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         holder.description.setText(tracking.getDescription());
         holder.target.setText(formatTarget(plan.getTargetPrice()));
         holder.scope.setText(scopeLabel(plan.isForAllDevices()));
-
-        if (plan.isInGroup()) {
-            holder.group.setVisibility(View.VISIBLE);
-            holder.group.setText(mActivity.getString(R.string.tracking_group_of, plan.getGroupName()));
-        } else {
-            holder.group.setVisibility(View.GONE);
-        }
 
         holder.paused.setVisibility(plan.isActive() ? View.GONE : View.VISIBLE);
 
@@ -220,7 +286,8 @@ public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
     }
 
-    static class GroupViewHolder extends RecyclerView.ViewHolder {
+    class GroupViewHolder extends RecyclerView.ViewHolder
+            implements View.OnCreateContextMenuListener {
 
         final MaterialCardView card;
         final TextView name;
@@ -228,15 +295,39 @@ public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         final TextView scope;
         final TextView members;
         final TextView paused;
+        final ImageView chevron;
+
+        TrackingGroup group;
 
         GroupViewHolder(View view) {
             super(view);
+            view.setOnCreateContextMenuListener(this);
+
             card = view.findViewById(R.id.tracking_group_card);
             name = view.findViewById(R.id.tracking_group_name);
             target = view.findViewById(R.id.tracking_group_target);
             scope = view.findViewById(R.id.tracking_group_scope);
             members = view.findViewById(R.id.tracking_group_members);
             paused = view.findViewById(R.id.tracking_group_paused);
+            chevron = view.findViewById(R.id.tracking_group_chevron);
+        }
+
+        /**
+         * Editar saiu do toque, que agora abre o grupo, e veio para o long
+         * press - o mesmo gesto que ja guarda as acoes da linha de produto.
+         */
+        @Override
+        public void onCreateContextMenu(ContextMenu menu, View v,
+                                        ContextMenu.ContextMenuInfo menuInfo) {
+            MenuInflater inflater = new MenuInflater(v.getContext());
+            inflater.inflate(R.menu.context_menu_tracking_group, menu);
+
+            TrackingGroup current = group;
+
+            menu.findItem(R.id.action_tracking_group_edit).setOnMenuItemClickListener(menuItem -> {
+                mActivity.editGroup(current);
+                return true;
+            });
         }
     }
 
@@ -247,7 +338,6 @@ public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         final TextView description;
         final TextView target;
         final TextView scope;
-        final TextView group;
         final TextView paused;
 
         Tracking tracking;
@@ -260,7 +350,6 @@ public class TrackingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             description = view.findViewById(R.id.tracking_description);
             target = view.findViewById(R.id.tracking_target);
             scope = view.findViewById(R.id.tracking_scope);
-            group = view.findViewById(R.id.tracking_group);
             paused = view.findViewById(R.id.tracking_paused);
         }
 

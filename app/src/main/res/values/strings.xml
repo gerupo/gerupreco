@@ -144,7 +144,6 @@
     <string name="tracking_target">Preço alvo</string>
     <string name="tracking_target_required">Informe o preço alvo.</string>
     <string name="tracking_target_value">Alvo %1$s</string>
-    <string name="tracking_group_of">Grupo: %1$s</string>
     <string name="tracking_no_group">Sem grupo</string>
     <string name="tracking_group_owns_target">O alvo e o alcance vêm do grupo.</string>
     <!-- Nome que ainda nao existe: os campos seguem ligados e o que for

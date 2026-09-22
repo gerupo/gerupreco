@@ -10,7 +10,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
 import com.vacari.gerupreco.R;
-import com.vacari.gerupreco.activity.tracking.TrackingActivity;
+import com.vacari.gerupreco.activity.MainActivity;
 import com.vacari.gerupreco.util.StringUtil;
 
 /**
@@ -21,6 +21,14 @@ import com.vacari.gerupreco.util.StringUtil;
  * canal que o sistema usa ao desenhar por conta propria com o app fechado.
  */
 public class TrackingNotifier {
+
+    /**
+     * Chave do codigo de barras no intent que o toque no alerta abre. E o nome
+     * do campo no bloco data da mensagem (functions/src/notify.js): com o app
+     * fechado o sistema repassa esse bloco como extras, e os dois caminhos
+     * precisam chegar na MainActivity com a mesma chave.
+     */
+    public static final String EXTRA_BAR_CODE = "barCode";
 
     private TrackingNotifier() {
     }
@@ -52,10 +60,19 @@ public class TrackingNotifier {
     public static void show(Context context, String title, String body, String barCode) {
         ensureChannel(context);
 
-        Intent intent = new Intent(context, TrackingActivity.class);
+        // Abre pela MainActivity, e nao direto na tela de precos, para o toque
+        // passar pelo gate de versao - e para os dois caminhos do alerta
+        // terminarem no mesmo lugar. Voltar da tela de precos cai na home.
+        Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        if (!StringUtil.isEmpty(barCode)) {
+            intent.putExtra(EXTRA_BAR_CODE, barCode);
+        }
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
+        // O request code e por produto: com um so, o FLAG_UPDATE_CURRENT faria
+        // o alerta mais novo reescrever o extra do anterior ainda na bandeja, e
+        // tocar no aviso do leite abriria os precos da cerveja.
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, notificationId(barCode), intent,
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId(context))

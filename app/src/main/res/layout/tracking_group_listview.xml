@@ -46,6 +46,17 @@
                 android:text="@string/price_placeholder"
                 android:textAppearance="@style/TextAppearance.GeruPreco.PriceDisplay" />
 
+            <!-- Aponta para a direita fechado e para baixo aberto: o toque no
+                 card abre o grupo, como uma pasta, e editar fica no long press. -->
+            <ImageView
+                android:id="@+id/tracking_group_chevron"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="@dimen/space_base"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_chevron_right_24"
+                app:tint="@color/on_surface_variant" />
+
         </LinearLayout>
 
         <LinearLayout

@@ -1,0 +1,7 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- O toque no grupo abre e fecha a lista dos produtos dele, entao editar
+         mora aqui. Remover o grupo continua dentro do dialogo de edicao. -->
+    <item
+        android:id="@+id/action_tracking_group_edit"
+        android:title="@string/tracking_edit_group" />
+</menu>

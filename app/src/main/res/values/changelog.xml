@@ -13,15 +13,13 @@
     <string name="changelog_dismiss">Entendi</string>
 
     <string-array name="changelog_titles">
-        <item>Novo módulo: Rastreamento de preços</item>
-        <item>A lista marca o que está sendo rastreado</item>
-        <item>Junte produtos num grupo com o mesmo alvo</item>
+        <item>Toque no aviso e veja os preços</item>
+        <item>Produtos agrupados ficam dentro do grupo</item>
     </string-array>
 
     <string-array name="changelog_descriptions">
-        <item>Escolha um produto, defina o preço que você aceita pagar, e o app avisa quando alguma loja da região chegar nesse valor. A conferência é feita quatro vezes por dia; você não precisa abrir o app. No card do módulo, em \"Rastreamento\", dá para ver tudo o que está sendo vigiado, pausar um item ou parar de vez.</item>
-        <item>Na lista de produtos, quem está sendo rastreado ganha uma marca roxa no canto esquerdo do card — do lado oposto à marca verde do carrinho, então um produto que está nas duas situações mostra as duas.</item>
-        <item>Vários produtos podem dividir o mesmo preço alvo: basta escrever o nome de um grupo ao rastrear, e os já criados aparecem como sugestão, igual às tags. Basta um deles chegar ao alvo para o aviso sair. Você também escolhe se o alerta vai para todos os seus aparelhos ou só para este.</item>
+        <item>Quando chegar um aviso de preço, toque nele: o app abre direto na lista de preços daquele produto, com a loja mais barata no topo.</item>
+        <item>No Rastreamento, a lista de produtos mostra só quem não está em grupo. Toque num grupo para abrir os produtos dele logo abaixo, e toque de novo para fechar. Para editar o grupo, segure o dedo sobre ele.</item>
     </string-array>
 
 </resources>

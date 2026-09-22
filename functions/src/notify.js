@@ -25,6 +25,12 @@ const CHANNEL_ID = "price_alerts";
  */
 const TOPIC_ALL = "geral";
 
+/**
+ * O nome do campo barCode no data e contrato com o app
+ * (TrackingNotifier.EXTRA_BAR_CODE): com o app fechado o sistema repassa esse
+ * bloco como extras do intent, e e por ele que o toque no alerta abre a tela de
+ * precos do produto. Renomear aqui faz o toque cair na home.
+ */
 function buildMessage(target, { title, body, barCode }) {
   return {
     ...target,
